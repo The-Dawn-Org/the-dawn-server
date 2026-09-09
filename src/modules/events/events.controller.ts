@@ -1,6 +1,6 @@
 import { Controller, Get } from "@nestjs/common";
 import { ApiOperation } from "@nestjs/swagger";
-import type { EventType } from "./events.repository.js";
+import type { EventType } from "../../types/Event.js";
 import { EventsService } from "./events.service.js";
 
 @Controller('events')
