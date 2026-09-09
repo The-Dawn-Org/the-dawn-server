@@ -1,48 +1,138 @@
 import { Injectable } from "@nestjs/common";
-import { cardsInfo, CostBySystem, DailyInterceptionsData } from "./types.js";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { InterceptionEntity } from "../finance/entities/interception.entity.js";
+import type { cardsInfo, DailyInterceptionsData } from "./types.js";
 
 @Injectable()
 export class FinanceRepository {
-  private readonly CardsInfoMock: cardsInfo = {
-    totalCost: 291000000,
-    interceptorsLaunced: 264,
-    dronsesData: {
-      totalCost: 3200000,
-      count: 161,
-    },
-    budgetVariance: 41.8,
-    averageInterceptCost: 1100000,
-  };
+  constructor(
+    @InjectRepository(InterceptionEntity)
+    private readonly interceptionRepo: Repository<InterceptionEntity>,
+  ) {}
 
-  private readonly CostBySystemMock: CostBySystem = [
-    { system: "Arrow 3", cost: 145000000 },
-    { system: "Arrow 2", cost: 76000000 },
-    { system: "David's Sling", cost: 58000000 },
-    { system: "Iron Dome", cost: 3000000 },
-  ];
+  /**
+   * Helper to normalize dates to full UTC day bounds (00:00:00.000 to 23:59:59.999)
+   */
+  private normalizeDateRange(startDate?: string | Date, endDate?: string | Date) {
+    if (!startDate || !endDate) return null;
 
-  private readonly DailyInterceptionsMock: DailyInterceptionsData = [
-    { date: "2026-03-01", dronesIntercepted: 12, totalCost: 240000 },
-    { date: "2026-03-02", dronesIntercepted: 25, totalCost: 500000 },
-    { date: "2026-03-03", dronesIntercepted: 18, totalCost: 360000 },
-    { date: "2026-03-04", dronesIntercepted: 30, totalCost: 600000 },
-    { date: "2026-03-05", dronesIntercepted: 8, totalCost: 160000 },
-    { date: "2026-03-06", dronesIntercepted: 42, totalCost: 840000 },
-    { date: "2026-03-07", dronesIntercepted: 26, totalCost: 520000 },
-  ];
+    const start = new Date(startDate);
+    start.setUTCHours(0, 0, 0, 0);
 
-  getCardsInfo(_startDate: string, _endDate: string): cardsInfo {
-    // Implement date filtering logic here when connecting DB
-    return this.CardsInfoMock;
+    const end = new Date(endDate);
+    end.setUTCHours(23, 59, 59, 999);
+
+    return {
+      start: start.toISOString(),
+      end: end.toISOString(),
+    };
   }
 
-  getCostBySystem(_startDate: string, _endDate: string): CostBySystem {
-    // Implement date filtering logic here when connecting DB
-    return this.CostBySystemMock;
+  /**
+   * Aggregated metrics for summary cards
+   */
+  async getCardMetrics(startDate?: string | Date, endDate?: string | Date): Promise<cardsInfo> {
+    const range = this.normalizeDateRange(startDate, endDate);
+
+    const qb = this.interceptionRepo
+      .createQueryBuilder("interception")
+      .select('COALESCE(SUM("interceptorType"."price"), 0)', "totalCost")
+      .addSelect('COUNT("interception"."id")', "interceptorsLaunched")
+      .addSelect('COUNT(DISTINCT "drone"."id")', "dronesCount")
+      .addSelect('COALESCE(SUM(DISTINCT "droneType"."price"), 0)', "dronesTotalCost")
+      .innerJoin("interception.interceptorType", "interceptorType")
+      .innerJoin("interception.drone", "drone")
+      .innerJoin("drone.droneType", "droneType");
+
+    if (range) {
+      qb.where("interception.launchedAt BETWEEN :start AND :end", {
+        start: range.start,
+        end: range.end,
+      });
+    }
+
+    const raw = await qb.getRawOne();
+
+    const totalCost = Number(raw?.totalCost || 0);
+    const interceptorsLaunched = Number(raw?.interceptorsLaunched || 0);
+    const dronesCount = Number(raw?.dronesCount || 0);
+    const dronesTotalCost = Number(raw?.dronesTotalCost || 0);
+
+    const HARDCODED_BUDGET = 180000;
+
+    const budgetVariance =
+      HARDCODED_BUDGET > 0
+        ? Number((((HARDCODED_BUDGET - totalCost) / HARDCODED_BUDGET) * 100).toFixed(2))
+        : 0;
+
+    const averageInterceptCost = interceptorsLaunched > 0 ? totalCost / interceptorsLaunched : 0;
+
+    return {
+      totalCost,
+      interceptorsLaunched,
+      dronsesData: {
+        count: dronesCount,
+        totalCost: dronesTotalCost,
+      },
+      budgetVariance,
+      averageInterceptCost,
+    };
   }
 
-  getDailyInterceptions(_startDate: string, _endDate: string): DailyInterceptionsData {
-    // Implement date filtering logic here when connecting DB
-    return this.DailyInterceptionsMock;
+  /**
+   * Daily interception metrics grouped by day
+   */
+  async getDailyInterceptions(
+    startDate?: string | Date,
+    endDate?: string | Date,
+  ): Promise<DailyInterceptionsData> {
+    const range = this.normalizeDateRange(startDate, endDate);
+
+    const qb = this.interceptionRepo
+      .createQueryBuilder("interception")
+      .select("DATE(interception.launchedAt)", "date")
+      .addSelect('COUNT("interception"."id")', "interceptionsCount")
+      .addSelect('COALESCE(SUM("interceptorType"."price"), 0)', "dailyCost")
+      .innerJoin("interception.interceptorType", "interceptorType")
+      .groupBy("DATE(interception.launchedAt)")
+      .orderBy("DATE(interception.launchedAt)", "ASC");
+
+    if (range) {
+      qb.where("interception.launchedAt BETWEEN :start AND :end", {
+        start: range.start,
+        end: range.end,
+      });
+    }
+
+    return qb.getRawMany();
+  }
+
+  /**
+   * Cost breakdown per system with a hardcoded budget of 180,000
+   */
+  async getCostPerSystem(startDate?: string | Date, endDate?: string | Date) {
+    const range = this.normalizeDateRange(startDate, endDate);
+
+    const qb = this.interceptionRepo
+      .createQueryBuilder("interception")
+      .select('"interceptorType"."name"', "systemName")
+      .addSelect('COALESCE(SUM("interceptorType"."price"), 0)', "totalCost")
+      .innerJoin("interception.interceptorType", "interceptorType")
+      .groupBy('"interceptorType"."name"');
+
+    if (range) {
+      qb.where("interception.launchedAt BETWEEN :start AND :end", {
+        start: range.start,
+        end: range.end,
+      });
+    }
+
+    const rawResults = await qb.getRawMany();
+
+    return rawResults.map((row) => ({
+      systemName: row.systemName,
+      totalCost: Number(row.totalCost || 0),
+    }));
   }
 }

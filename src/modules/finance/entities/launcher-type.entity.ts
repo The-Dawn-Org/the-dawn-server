@@ -1,5 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
-import { LiveLauncherEntity } from "./live-launcher.entity.js";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import type { LiveLauncherEntity } from "./live-launcher.entity.js";
 
 @Entity({ name: "launcher_type", schema: "hatzot" })
 export class LauncherTypeEntity {
@@ -15,6 +15,6 @@ export class LauncherTypeEntity {
   @Column({ name: "range_m", type: "integer", nullable: true })
   rangeM!: number;
 
-  @OneToMany(() => LiveLauncherEntity, (launcher) => launcher.launcherType)
+  @OneToMany("LiveLauncherEntity", "launcherType")
   launchers!: LiveLauncherEntity[];
 }

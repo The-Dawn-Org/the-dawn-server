@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { DronePositionEntity } from "./drone-position.entity.js";
-import { DroneTypeEntity } from "./drone-type.entity.js";
-import { InterceptionEntity } from "./interception.entity.js";
+import type { DronePositionEntity } from "./drone-position.entity.js";
+import type { DroneTypeEntity } from "./drone-type.entity.js";
+import type { InterceptionEntity } from "./interception.entity.js";
 
 @Entity({ name: "drone", schema: "hatzot" })
 export class DroneEntity {
@@ -17,13 +17,13 @@ export class DroneEntity {
   @Column({ type: "double precision", nullable: true })
   velocity!: number;
 
-  @ManyToOne(() => DroneTypeEntity, (type) => type.drones)
+  @ManyToOne("DroneTypeEntity", "drones")
   @JoinColumn({ name: "drone_type_id" })
   droneType!: DroneTypeEntity;
 
-  @OneToMany(() => DronePositionEntity, (position) => position.drone)
+  @OneToMany("DronePositionEntity", "drone")
   positions!: DronePositionEntity[];
 
-  @OneToMany(() => InterceptionEntity, (interception) => interception.drone)
+  @OneToMany("InterceptionEntity", "drone")
   interceptions!: InterceptionEntity[];
 }

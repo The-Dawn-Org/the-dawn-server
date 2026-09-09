@@ -1,8 +1,8 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { DeploymentEntity } from "./deployment.entity.js";
-import { InterceptionEntity } from "./interception.entity.js";
-import { LauncherAmmunitionEntity } from "./launcher-ammunition.entity.js";
-import { LauncherTypeEntity } from "./launcher-type.entity.js";
+import type { DeploymentEntity } from "./deployment.entity.js";
+import type { InterceptionEntity } from "./interception.entity.js";
+import type { LauncherAmmunitionEntity } from "./launcher-ammunition.entity.js";
+import type { LauncherTypeEntity } from "./launcher-type.entity.js";
 
 export enum LauncherStatus {
   ACTIVE = "ACTIVE",
@@ -45,22 +45,22 @@ export class LiveLauncherEntity {
   @Column({
     type: "enum",
     enum: LauncherStatus,
-    enumName: "launcher_status",
+    enumName: "hatzot.launcher_status",
     default: LauncherStatus.DRAFT,
   })
   status!: LauncherStatus;
 
-  @ManyToOne(() => DeploymentEntity, (dep) => dep.launchers)
+  @ManyToOne("DeploymentEntity", "launchers")
   @JoinColumn({ name: "deployment_id" })
   deployment!: DeploymentEntity;
 
-  @ManyToOne(() => LauncherTypeEntity, (type) => type.launchers)
+  @ManyToOne("LauncherTypeEntity", "launchers")
   @JoinColumn({ name: "launcher_type_id" })
   launcherType!: LauncherTypeEntity;
 
-  @OneToMany(() => LauncherAmmunitionEntity, (ammo) => ammo.launcher)
+  @OneToMany("LauncherAmmunitionEntity", "launcher")
   ammunition!: LauncherAmmunitionEntity[];
 
-  @OneToMany(() => InterceptionEntity, (interception) => interception.liveLauncher)
+  @OneToMany("InterceptionEntity", "liveLauncher")
   interceptions!: InterceptionEntity[];
 }

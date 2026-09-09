@@ -1,5 +1,5 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { LiveLauncherEntity } from "./live-launcher.entity.js";
+import type { LiveLauncherEntity } from "./live-launcher.entity.js";
 
 export enum DeploymentStatus {
   REAL = "Real",
@@ -18,11 +18,11 @@ export class DeploymentEntity {
   @Column({
     type: "enum",
     enum: DeploymentStatus,
-    enumName: "deployment_status",
+    enumName: "hatzot.deployment_status",
     default: DeploymentStatus.DRAFT,
   })
   status!: DeploymentStatus;
 
-  @OneToMany(() => LiveLauncherEntity, (launcher) => launcher.deployment)
+  @OneToMany("LiveLauncherEntity", "deployment")
   launchers!: LiveLauncherEntity[];
 }

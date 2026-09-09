@@ -1,6 +1,6 @@
 import { Controller, Get, Query } from "@nestjs/common";
 import { ApiOperation } from "@nestjs/swagger";
-import { DateRangeQueryDto } from "../../DTOS/date-range-query.dto.js";
+import { DateRangeQueryDto } from "./DTOS/date-range-query.dto.js";
 import { FinanceService } from "./finance.service.js";
 import type { cardsInfo, CostBySystem, DailyInterceptionsData } from "./types.ts";
 
@@ -10,19 +10,19 @@ export class FinanceController {
 
   @Get("cards")
   @ApiOperation({ summary: "get cards data" })
-  getCardsInfo(@Query() query: DateRangeQueryDto): cardsInfo {
+  async getCardsInfo(@Query() query: DateRangeQueryDto): Promise<cardsInfo> {
     return this.financeService.getCardsInfo(query.startDate, query.endDate);
   }
 
   @Get("cost-by-system")
   @ApiOperation({ summary: "get cost per system chart data" })
-  getCostBySystem(@Query() query: DateRangeQueryDto): CostBySystem {
+  async getCostBySystem(@Query() query: DateRangeQueryDto): Promise<CostBySystem> {
     return this.financeService.getCostBySystem(query.startDate, query.endDate);
   }
 
   @Get("daily-interceptions")
   @ApiOperation({ summary: "get daily drone interception stats" })
-  getDailyInterceptions(@Query() query: DateRangeQueryDto): DailyInterceptionsData {
+  async getDailyInterceptions(@Query() query: DateRangeQueryDto): Promise<DailyInterceptionsData> {
     return this.financeService.getDailyInterceptions(query.startDate, query.endDate);
   }
 }
