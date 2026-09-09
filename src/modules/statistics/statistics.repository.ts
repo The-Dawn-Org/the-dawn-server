@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
 
 export interface MockData {
   id: number;
@@ -6,14 +6,13 @@ export interface MockData {
 }
 
 @Injectable()
-export class AppRepository {
+export class StatisticsRepository {
   private readonly mockData: MockData[] = [
-    { id: 1, message: 'Hello World from Mock DB!' },
-    { id: 2, message: 'This is another mock item.' },
+    { id: 1, message: "Hello World from Mock DB!" },
+    { id: 2, message: "This is another mock item." },
   ];
 
   getMockData(): MockData[] {
     return this.mockData;
   }
 }
-
