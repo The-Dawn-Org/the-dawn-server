@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { cardsInfo } from "./types.js";
+import { cardsInfo, CostBySystem } from "./types.js";
 
 @Injectable()
 export class FinanceRepository {
@@ -14,7 +14,20 @@ export class FinanceRepository {
     averageInterceptCost: 1100000
   };
 
-  getCardsInfo(): cardsInfo {
+  private readonly CostBySystemMock: CostBySystem = [
+    { system: "Arrow 3", cost: 145000000 },
+    { system: "Arrow 2", cost: 76000000 },
+    { system: "David's Sling", cost: 58000000 },
+    { system: "Iron Dome", cost: 3000000 },
+  ];
+
+  getCardsInfo(_startDate: string, _endDate: string): cardsInfo {
+    // Implement date filtering logic here when connecting DB
     return this.CardsInfoMock;
+  }
+
+  getCostBySystem(_startDate: string, _endDate: string): CostBySystem {
+    // Implement date filtering logic here when connecting DB
+    return this.CostBySystemMock;
   }
 }
