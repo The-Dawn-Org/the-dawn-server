@@ -1,5 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
-import { DroneEntity } from "./drone.entity.js";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import type { DroneEntity } from "./drone.entity.js";
 
 @Entity({ name: "drone_type", schema: "hatzot" })
 export class DroneTypeEntity {
@@ -12,6 +12,6 @@ export class DroneTypeEntity {
   @Column({ type: "integer", nullable: true })
   price!: number;
 
-  @OneToMany(() => DroneEntity, (drone) => drone.droneType)
+  @OneToMany("DroneEntity", "droneType")
   drones!: DroneEntity[];
 }

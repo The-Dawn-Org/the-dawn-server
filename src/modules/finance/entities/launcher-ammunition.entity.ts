@@ -1,7 +1,7 @@
-import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, OneToMany } from "typeorm";
-import { LiveLauncherEntity } from "./live-launcher.entity.js";
-import { InterceptorTypeEntity } from "./interceptor-type.entity.js";
-import { InterceptionEntity } from "./interception.entity.js";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryColumn } from "typeorm";
+import type { InterceptionEntity } from "./interception.entity.js";
+import type { InterceptorTypeEntity } from "./interceptor-type.entity.js";
+import type { LiveLauncherEntity } from "./live-launcher.entity.js";
 
 @Entity({ name: "launcher_ammunition", schema: "hatzot" })
 export class LauncherAmmunitionEntity {
@@ -14,14 +14,14 @@ export class LauncherAmmunitionEntity {
   @Column({ type: "integer", default: 0 })
   quantity!: number;
 
-  @ManyToOne(() => LiveLauncherEntity, (launcher) => launcher.ammunition)
+  @ManyToOne("LiveLauncherEntity", "ammunition")
   @JoinColumn({ name: "launcher_id" })
   launcher!: LiveLauncherEntity;
 
-  @ManyToOne(() => InterceptorTypeEntity, (type) => type.ammunition)
+  @ManyToOne("InterceptorTypeEntity", "ammunition")
   @JoinColumn({ name: "interceptor_type_id" })
   interceptorType!: InterceptorTypeEntity;
 
-  @OneToMany(() => InterceptionEntity, (interception) => interception.launcherAmmunition)
+  @OneToMany("InterceptionEntity", "launcherAmmunition")
   interceptions!: InterceptionEntity[];
 }
