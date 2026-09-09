@@ -1,16 +1,31 @@
-import { Controller, Get } from "@nestjs/common";
-import { ApiOperation } from "@nestjs/swagger";
+import { Controller, Get, Query } from "@nestjs/common";
+import { ApiOperation, ApiQuery } from "@nestjs/swagger";
 import { FinanceService } from "./finance.service.js";
-import type { cardsInfo } from "./types.js";
-
+import type { cardsInfo, CostBySystem } from "./types.js";
 
 @Controller()
 export class FinanceController {
-    constructor(private readonly financeService: FinanceService) {}
+  constructor(private readonly financeService: FinanceService) {}
 
-    @Get("cards")
-    @ApiOperation({summary: "get cards data"})
-    getCardsInfo(): cardsInfo {
-        return this.financeService.getCardsInfo()
-    }
+  @Get("cards")
+  @ApiOperation({ summary: "get cards data" })
+  @ApiQuery({ name: "startDate", required: true, type: String })
+  @ApiQuery({ name: "endDate", required: true, type: String })
+  getCardsInfo(
+    @Query("startDate") startDate: string,
+    @Query("endDate") endDate: string,
+  ): cardsInfo {
+    return this.financeService.getCardsInfo(startDate, endDate);
+  }
+
+  @Get("cost-by-system")
+  @ApiOperation({ summary: "get cost per system chart data" })
+  @ApiQuery({ name: "startDate", required: true, type: String })
+  @ApiQuery({ name: "endDate", required: true, type: String })
+  getCostBySystem(
+    @Query("startDate") startDate: string,
+    @Query("endDate") endDate: string,
+  ): CostBySystem {
+    return this.financeService.getCostBySystem(startDate, endDate);
+  }
 }
