@@ -6,15 +6,15 @@ import { cardsInfo, CostBySystem, DailyInterceptionsData } from "./types.js";
 export class FinanceService {
   constructor(private readonly financeRepository: FinanceRepository) {}
 
-  getCardsInfo(startDate: string, endDate: string): cardsInfo {
-    return this.financeRepository.getCardsInfo(startDate, endDate);
+  async getCardsInfo(startDate: string, endDate: string): Promise<cardsInfo> {
+    return this.financeRepository.getCardMetrics(startDate, endDate);
   }
 
-  getCostBySystem(startDate: string, endDate: string): CostBySystem {
-    return this.financeRepository.getCostBySystem(startDate, endDate);
+  async getCostBySystem(startDate: string, endDate: string): Promise<CostBySystem> {
+    return this.financeRepository.getCostPerSystem(startDate, endDate);
   }
 
-  getDailyInterceptions(startDate: string, endDate: string): DailyInterceptionsData {
+  async getDailyInterceptions(startDate: string, endDate: string): Promise<DailyInterceptionsData> {
     return this.financeRepository.getDailyInterceptions(startDate, endDate);
   }
 }

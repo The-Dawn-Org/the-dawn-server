@@ -1,7 +1,8 @@
 import { Controller, Get, Query } from "@nestjs/common";
-import { ApiOperation, ApiQuery } from "@nestjs/swagger";
+import { ApiOperation } from "@nestjs/swagger";
+import { DateRangeQueryDto } from "./DTOS/date-range-query.dto.js";
 import { FinanceService } from "./finance.service.js";
-import type { cardsInfo, CostBySystem, DailyInterceptionsData } from "./types.js";
+import type { cardsInfo, CostBySystem, DailyInterceptionsData } from "./types.ts";
 
 @Controller()
 export class FinanceController {
@@ -9,34 +10,19 @@ export class FinanceController {
 
   @Get("cards")
   @ApiOperation({ summary: "get cards data" })
-  @ApiQuery({ name: "startDate", required: true, type: String })
-  @ApiQuery({ name: "endDate", required: true, type: String })
-  getCardsInfo(
-    @Query("startDate") startDate: string,
-    @Query("endDate") endDate: string,
-  ): cardsInfo {
-    return this.financeService.getCardsInfo(startDate, endDate);
+  async getCardsInfo(@Query() query: DateRangeQueryDto): Promise<cardsInfo> {
+    return this.financeService.getCardsInfo(query.startDate, query.endDate);
   }
 
   @Get("cost-by-system")
   @ApiOperation({ summary: "get cost per system chart data" })
-  @ApiQuery({ name: "startDate", required: true, type: String })
-  @ApiQuery({ name: "endDate", required: true, type: String })
-  getCostBySystem(
-    @Query("startDate") startDate: string,
-    @Query("endDate") endDate: string,
-  ): CostBySystem {
-    return this.financeService.getCostBySystem(startDate, endDate);
+  async getCostBySystem(@Query() query: DateRangeQueryDto): Promise<CostBySystem> {
+    return this.financeService.getCostBySystem(query.startDate, query.endDate);
   }
 
   @Get("daily-interceptions")
   @ApiOperation({ summary: "get daily drone interception stats" })
-  @ApiQuery({ name: "startDate", required: true, type: String })
-  @ApiQuery({ name: "endDate", required: true, type: String })
-  getDailyInterceptions(
-    @Query("startDate") startDate: string,
-    @Query("endDate") endDate: string,
-  ): DailyInterceptionsData {
-    return this.financeService.getDailyInterceptions(startDate, endDate);
+  async getDailyInterceptions(@Query() query: DateRangeQueryDto): Promise<DailyInterceptionsData> {
+    return this.financeService.getDailyInterceptions(query.startDate, query.endDate);
   }
 }
