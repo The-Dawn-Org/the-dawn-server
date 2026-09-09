@@ -1,4 +1,4 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get, Param } from "@nestjs/common";
 import { ApiOperation } from "@nestjs/swagger";
 import type { EventType } from "../../types/Event.js";
 import { EventsService } from "./events.service.js";
@@ -7,9 +7,9 @@ import { EventsService } from "./events.service.js";
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
-  @Get()
+  @Get(':id')
   @ApiOperation({ summary: "Get mock event" })
-  getEventById(): EventType {
-    return this.eventsService.getEventById();
+  getEventById(@Param('id') id: string): EventType {
+    return this.eventsService.getEventById(id);
   }
 }

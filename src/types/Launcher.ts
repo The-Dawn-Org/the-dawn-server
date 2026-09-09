@@ -1,4 +1,5 @@
-import type { Location, LauncherType } from ".";
+import type { LauncherType } from "./LauncherType.js";
+import type { Location } from "./Location.js";
 
 export interface Launcher {
   launcherId: number;

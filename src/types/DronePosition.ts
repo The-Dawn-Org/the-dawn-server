@@ -1,4 +1,5 @@
-import type { Location, Drone } from ".";
+import type { Drone } from "./Drone.js";
+import type { Location } from "./Location.js";
 
 export interface DronePosition {
   dronePositionId: number;

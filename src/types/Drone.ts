@@ -1,4 +1,4 @@
-import type { DroneType } from ".";
+import type { DroneType } from "./DroneType.js";
 
 export interface Drone {
   droneId: number;

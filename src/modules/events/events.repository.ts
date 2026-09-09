@@ -33,7 +33,7 @@ export class EventsRepository {
     },
   };
 
-  getMockEvent(): EventType {
+  getMockEvent(id: string): EventType {
     return this.mockEvent;
   }
 }
