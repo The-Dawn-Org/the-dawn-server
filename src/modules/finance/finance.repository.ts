@@ -81,7 +81,7 @@ export class FinanceRepository {
   }
 
   /**
-   * Daily interception metrics grouped by day
+   * Daily interception metrics grouped by day with drone and interceptor costs
    */
   async getDailyInterceptions(
     startDate?: string | Date,
@@ -92,9 +92,11 @@ export class FinanceRepository {
     const qb = this.interceptionRepo
       .createQueryBuilder("interception")
       .select("DATE(interception.launchedAt)", "date")
-      .addSelect('COUNT("interception"."id")', "interceptionsCount")
-      .addSelect('COALESCE(SUM("interceptorType"."price"), 0)', "dailyCost")
+      .addSelect('COALESCE(SUM("droneType"."price"), 0)', "dronesTotalCost")
+      .addSelect('COALESCE(SUM("interceptorType"."price"), 0)', "interceptorsTotalCost")
       .innerJoin("interception.interceptorType", "interceptorType")
+      .innerJoin("interception.drone", "drone")
+      .innerJoin("drone.droneType", "droneType")
       .groupBy("DATE(interception.launchedAt)")
       .orderBy("DATE(interception.launchedAt)", "ASC");
 
@@ -105,7 +107,13 @@ export class FinanceRepository {
       });
     }
 
-    return qb.getRawMany();
+    const rawResults = await qb.getRawMany();
+
+    return rawResults.map((row) => ({
+      date: row.date,
+      dronesTotalCost: Number(row.dronesTotalCost || 0),
+      interceptorsTotalCost: Number(row.interceptorsTotalCost || 0),
+    }));
   }
 
   /**
