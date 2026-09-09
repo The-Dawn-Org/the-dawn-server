@@ -1,6 +1,6 @@
 import { Controller, Get, Query } from "@nestjs/common";
 import { ApiOperation } from "@nestjs/swagger";
-import { DateRangeQueryDto } from "./DTOS/date-range-query.dto.js";
+import { DateRangeQueryDto } from "../../DTOS/date-range-query.dto.js";
 import { FinanceService } from "./finance.service.js";
 import type { cardsInfo, CostBySystem, DailyInterceptionsData } from "./types.ts";
 
