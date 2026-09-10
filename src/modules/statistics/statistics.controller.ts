@@ -1,9 +1,17 @@
 import { Controller, Get, Header, Query, Res } from "@nestjs/common";
 import { ApiOperation } from "@nestjs/swagger";
 import type { Response } from "express";
+import { readFileSync } from "node:fs";
 import puppeteer from "puppeteer";
 import { MockData } from "./statistics.repository.js";
 import { StatisticsService } from "./statistics.service.js";
+
+export function getLogoDataUri(): string {
+  const logoPath = new URL("../../../public/hashaharLogo.jpeg", import.meta.url);
+  const imageBuffer = readFileSync(logoPath);
+
+  return `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;
+}
 
 @Controller()
 export class StatisticsController {
@@ -37,10 +45,11 @@ export class StatisticsController {
         return;
       }
 
-    
-      let startDate = startDateQuery;
-      let endDate = endDateQuery;
+      // Get dates from query parameters first.
+      let startDate = startDateQuery ?? "";
+      let endDate = endDateQuery ?? "";
 
+      // If they were not passed separately, try to get them from the path.
       try {
         const pageUrl = new URL(path);
 
@@ -84,30 +93,28 @@ export class StatisticsController {
         timeout: 120000,
       });
 
-      await page.evaluate(
-        ({ startDate, endDate }) => {
-        
+      const logoDataUri = getLogoDataUri();
 
+      await page.evaluate(
+        ({ startDate, endDate, logoDataUri }) => {
           const formatDate = (value: string) => {
             if (!value) {
               return "";
             }
 
-            const date = new Date(value);
+            const [datePart, timePart] = value.split("T");
 
-            if (Number.isNaN(date.getTime())) {
+            if (!datePart) {
               return value;
             }
 
-            return date.toLocaleString("he-IL", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              hourCycle: "h23",
-              timeZone: "Asia/Jerusalem",
-            });
+            const [year, month, day] = datePart.split("-");
+
+            if (!year || !month || !day) {
+              return value;
+            }
+
+            return `${day}/${month}/${year}${timePart ? ` ${timePart}` : ""}`;
           };
 
           const dateRangeText =
@@ -128,8 +135,10 @@ export class StatisticsController {
           header.style.cssText = `
             position: relative;
             width: 100%;
+            min-height: 180px;
             margin-bottom: 30px;
-            padding-bottom: 20px;
+            padding: 10px 220px 20px 220px;
+            box-sizing: border-box;
             font-family: Arial, sans-serif;
             direction: rtl;
           `;
@@ -138,8 +147,8 @@ export class StatisticsController {
 
           currentDate.style.cssText = `
             position: absolute;
-            top: 0;
-            left: 0;
+            top: 15px;
+            left: 15px;
             font-size: 13px;
             color: #666;
             text-align: left;
@@ -159,12 +168,30 @@ export class StatisticsController {
 
           title.style.cssText = `
             margin: 0;
+            margin-top: 60px;
             text-align: center;
             font-size: 32px;
             font-weight: 700;
+            line-height: 1.2;
           `;
 
           title.textContent = "דו״ח חקירה";
+
+          const logo = document.createElement("img");
+          logo.src = logoDataUri;
+          logo.alt = "Logo";
+          logo.style.cssText = `
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: auto;
+            object-fit: contain;
+            display: block;
+            z-index: 2;
+            filter: none;
+            background: transparent;
+          `;
 
           const dateRange = document.createElement("div");
 
@@ -181,6 +208,7 @@ export class StatisticsController {
           }
 
           header.appendChild(currentDate);
+          header.appendChild(logo);
           header.appendChild(title);
 
           if (dateRangeText) {
@@ -224,6 +252,8 @@ export class StatisticsController {
           summary.innerHTML = `
             <div style="
               margin-top: 40px;
+              margin-left: 35px;
+              margin-right: 35px;
               padding-top: 20px;
               border-top: 1px solid #ccc;
               font-family: Arial, sans-serif;
@@ -249,8 +279,9 @@ export class StatisticsController {
           document.body.appendChild(summary);
         },
         {
-          startDate: startDate ?? "",
-          endDate: endDate ?? "",
+          startDate,
+          endDate,
+          logoDataUri,
         },
       );
 
