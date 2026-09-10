@@ -7,8 +7,8 @@ import { EventsRepository } from "./events.repository.js";
 export class EventsService {
   constructor(private readonly eventsRepository: EventsRepository) {}
 
-  getEventById(): EventType {
-    return this.eventsRepository.getMockEvent();
+  async getEventById(id: number): Promise<EventType> {
+    return await this.eventsRepository.getEventById(id);
   }
 
   getAllEvents(filterDto: FilterEventsDto): EventType[] {

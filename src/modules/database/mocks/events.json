@@ -1,0 +1,50 @@
+[
+  {
+    "eventId": 1,
+    "interceptor": { "interceptorTypeId": 1, "type": "עוצר-זמזום 15", "price": 15000 },
+    "launcher": { "launcherId": 1, "location": { "lat": 33.0512, "lng": 35.2845 } },
+    "region": "צפון",
+    "time": "2026-09-10T09:58:00Z",
+    "eventLocation": { "lat": 32.0855, "lng": 34.7820 },
+    "interceptionStatus": "יורט",
+    "attackingBody": "לבנון",
+    "drone": { "type": "סקימייט סי-7", "price": 2500 },
+    "droneInjuryCount": 0
+  },
+  {
+    "eventId": 2,
+    "interceptor": { "interceptorTypeId": 2, "type": "כנף-רשת 30", "price": 22000 },
+    "launcher": { "launcherId": 1, "location": { "lat": 33.0512, "lng": 35.2845 } },
+    "region": "גליל מערבי",
+    "time": "2026-09-10T09:58:30Z",
+    "eventLocation": { "lat": 32.0858, "lng": 34.7823 },
+    "interceptionStatus": "לא יורט",
+    "attackingBody": "לבנון",
+    "drone": { "type": "סקימייט סי-7", "price": 2500 },
+    "droneInjuryCount": 0
+  },
+  {
+    "eventId": 3,
+    "interceptor": { "interceptorTypeId": 7, "type": "ערפל-נחיל 5", "price": 7500 },
+    "launcher": { "launcherId": 2, "location": { "lat": 32.8341, "lng": 35.195 } },
+    "region": "דרום",
+    "time": "2026-09-10T09:59:40Z",
+    "eventLocation": { "lat": 32.0995, "lng": 34.7995 },
+    "interceptionStatus": "יש נפגעים",
+    "attackingBody": "עזה",
+    "drone": { "type": "ננוסוורם קיו-9", "price": 1800 },
+    "droneInjuryCount": 2
+  },
+  {
+    "eventId": 4,
+    "interceptor": { "interceptorTypeId": 1, "type": "עוצר-זמזום 15", "price": 15000 },
+    "launcher": { "launcherId": 3, "location": { "lat": 32.482, "lng": 34.981 } },
+    "region": "מרכז",
+    "time": "2026-09-10T10:00:00Z",
+    "eventLocation": { "lat": null, "lng": null },
+    "interceptionStatus": "יש נפגעים",
+    "attackingBody": "עזה",
+    "drone": { "type": "לואדבי אמ-2", "price": 4200 },
+    "droneInjuryCount": 4
+  }
+]
