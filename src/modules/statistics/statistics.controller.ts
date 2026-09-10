@@ -1,9 +1,17 @@
 import { Controller, Get, Header, Query, Res } from "@nestjs/common";
 import { ApiOperation } from "@nestjs/swagger";
 import type { Response } from "express";
+import { readFileSync } from "node:fs";
 import puppeteer from "puppeteer";
 import { MockData } from "./statistics.repository.js";
 import { StatisticsService } from "./statistics.service.js";
+
+export function getLogoDataUri(): string {
+  const logoPath = new URL("../../../public/hashaharLogo.jpeg", import.meta.url);
+  const imageBuffer = readFileSync(logoPath);
+
+  return `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;
+}
 
 @Controller()
 export class StatisticsController {
@@ -37,18 +45,11 @@ export class StatisticsController {
         return;
       }
 
-      /*
-       * ============================
-       * GET DATE RANGE
-       * ============================
-       *
-       * First try the explicit query parameters.
-       * If they don't exist, try to get them from the path URL.
-       */
+      // Get dates from query parameters first.
+      let startDate = startDateQuery ?? "";
+      let endDate = endDateQuery ?? "";
 
-      let startDate = startDateQuery;
-      let endDate = endDateQuery;
-
+      // If they were not passed separately, try to get them from the path.
       try {
         const pageUrl = new URL(path);
 
@@ -60,19 +61,10 @@ export class StatisticsController {
           endDate = pageUrl.searchParams.get("endDate") ?? "";
         }
       } catch {
-        // If path is not a valid absolute URL, continue with the query values.
+        // Keep the query parameter values.
       }
 
-      /*
-       * ============================
-       * REMOVE PDF PARAMETERS
-       * FROM THE PAGE URL
-       * ============================
-       *
-       * We don't want the startDate/endDate parameters
-       * to affect the actual React page.
-       */
-
+      // Remove PDF-only parameters from the URL Puppeteer opens.
       let pagePath = path;
 
       try {
@@ -83,7 +75,7 @@ export class StatisticsController {
 
         pagePath = pageUrl.toString();
       } catch {
-        // Keep original path if it isn't a valid URL.
+        // Keep original path.
       }
 
       browser = await puppeteer.launch({
@@ -100,34 +92,36 @@ export class StatisticsController {
         timeout: 120000,
       });
 
-      await page.evaluate(
-        ({ startDate, endDate }) => {
-          /*
-           * ============================
-           * FORMAT SELECTED DATE RANGE
-           * ============================
-           */
+      const logoDataUri = getLogoDataUri();
 
+      await page.evaluate(
+        ({ startDate, endDate, logoDataUri }) => {
+          /*
+           * Format the date WITHOUT converting it to a JavaScript Date.
+           *
+           * The client sends:
+           * YYYY-MM-DDTHH:mm
+           *
+           * We simply display that exact date and time.
+           */
           const formatDate = (value: string) => {
             if (!value) {
               return "";
             }
 
-            const date = new Date(value);
+            const [datePart, timePart] = value.split("T");
 
-            if (Number.isNaN(date.getTime())) {
+            if (!datePart) {
               return value;
             }
 
-            return date.toLocaleString("he-IL", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              hourCycle: "h23",
-              timeZone: "Asia/Jerusalem",
-            });
+            const [year, month, day] = datePart.split("-");
+
+            if (!year || !month || !day) {
+              return value;
+            }
+
+            return `${day}/${month}/${year}${timePart ? ` ${timePart}` : ""}`;
           };
 
           const dateRangeText =
@@ -140,26 +134,22 @@ export class StatisticsController {
                   : "";
 
           /*
-           * ============================
            * INVERT PAGE FOR PDF
-           * ============================
            */
-
           document.body.style.filter = "invert(1)";
 
           /*
-           * ============================
            * PDF HEADER
-           * ============================
            */
-
           const header = document.createElement("div");
 
           header.style.cssText = `
             position: relative;
             width: 100%;
+            min-height: 180px;
             margin-bottom: 30px;
-            padding-bottom: 20px;
+            padding: 10px 220px 20px 220px;
+            box-sizing: border-box;
             font-family: Arial, sans-serif;
             direction: rtl;
           `;
@@ -167,13 +157,12 @@ export class StatisticsController {
           /*
            * Current date
            */
-
           const currentDate = document.createElement("div");
 
           currentDate.style.cssText = `
             position: absolute;
-            top: 0;
-            left: 0;
+            top: 15px;
+            left: 15px;
             font-size: 13px;
             color: #666;
             text-align: left;
@@ -192,7 +181,6 @@ export class StatisticsController {
           /*
            * Report title
            */
-
           const title = document.createElement("h1");
 
           title.style.cssText = `
@@ -200,14 +188,33 @@ export class StatisticsController {
             text-align: center;
             font-size: 32px;
             font-weight: 700;
+            line-height: 1.2;
           `;
 
           title.textContent = "דו״ח חקירה";
 
           /*
+           * Right-side logo
+           */
+          const logo = document.createElement("img");
+          logo.src = logoDataUri;
+          logo.alt = "Logo";
+          logo.style.cssText = `
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: auto;
+            object-fit: contain;
+            display: block;
+            z-index: 2;
+            filter: none;
+            background: transparent;
+          `;
+
+          /*
            * Selected date range
            */
-
           const dateRange = document.createElement("div");
 
           dateRange.style.cssText = `
@@ -223,6 +230,7 @@ export class StatisticsController {
           }
 
           header.appendChild(currentDate);
+          header.appendChild(logo);
           header.appendChild(title);
 
           if (dateRangeText) {
@@ -232,11 +240,8 @@ export class StatisticsController {
           document.body.prepend(header);
 
           /*
-           * ============================
            * HIDE NAVBAR
-           * ============================
            */
-
           document
             .querySelectorAll<HTMLElement>(".navbar")
             .forEach((element) => {
@@ -244,11 +249,8 @@ export class StatisticsController {
             });
 
           /*
-           * ============================
            * REMOVE SCROLLING
-           * ============================
            */
-
           const elements = document.querySelectorAll<HTMLElement>("*");
 
           elements.forEach((element) => {
@@ -268,11 +270,8 @@ export class StatisticsController {
           });
 
           /*
-           * ============================
            * HIDE EXPORT BUTTON
-           * ============================
            */
-
           document
             .querySelectorAll<HTMLElement>(".export-to-pdf-button")
             .forEach((element) => {
@@ -280,11 +279,8 @@ export class StatisticsController {
             });
 
           /*
-           * ============================
            * SUMMARY
-           * ============================
            */
-
           const summary = document.createElement("div");
 
           summary.innerHTML = `
@@ -315,17 +311,15 @@ export class StatisticsController {
           document.body.appendChild(summary);
         },
         {
-          startDate: startDate ?? "",
-          endDate: endDate ?? "",
+          startDate,
+          endDate,
+          logoDataUri,
         },
       );
 
       /*
-       * ============================
        * GENERATE PDF
-       * ============================
        */
-
       const pdfBuffer = await page.pdf({
         width: "1500px",
         printBackground: true,
