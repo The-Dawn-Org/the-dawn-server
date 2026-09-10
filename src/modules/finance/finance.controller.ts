@@ -1,6 +1,6 @@
 import { Controller, Get, Query } from "@nestjs/common";
 import { ApiOperation } from "@nestjs/swagger";
-import { DateRangeQueryDto } from "./DTOS/date-range-query.dto.js";
+import { DateRangeQueryDto } from "../../DTOS/date-range-query.dto.js";
 import { FinanceService } from "./finance.service.js";
 import type {
   CostBySystem,
@@ -35,5 +35,13 @@ export class FinanceController {
       query.startDate,
       query.endDate,
     );
+  }
+
+  @Get("budget-by-date")
+  async getBudgetByDateRange(
+    @Query("startDate") startDate: string,
+    @Query("endDate") endDate: string,
+  ) {
+    return this.financeService.getBudgetByDateRange(startDate, endDate);
   }
 }

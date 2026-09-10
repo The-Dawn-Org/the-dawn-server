@@ -28,3 +28,10 @@ export interface DailyInterceptions {
 }
 
 export type DailyInterceptionsData = DailyInterceptions[];
+
+export interface BudgetByDate {
+  date: string;
+  budget: number;
+}
+
+export type BudgetByDateRange = BudgetByDate[];
