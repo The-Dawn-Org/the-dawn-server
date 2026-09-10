@@ -61,10 +61,11 @@ export class StatisticsController {
           endDate = pageUrl.searchParams.get("endDate") ?? "";
         }
       } catch {
-        // Keep the query parameter values.
+      
       }
 
-      // Remove PDF-only parameters from the URL Puppeteer opens.
+      
+
       let pagePath = path;
 
       try {
@@ -75,7 +76,7 @@ export class StatisticsController {
 
         pagePath = pageUrl.toString();
       } catch {
-        // Keep original path.
+       
       }
 
       browser = await puppeteer.launch({
@@ -96,14 +97,6 @@ export class StatisticsController {
 
       await page.evaluate(
         ({ startDate, endDate, logoDataUri }) => {
-          /*
-           * Format the date WITHOUT converting it to a JavaScript Date.
-           *
-           * The client sends:
-           * YYYY-MM-DDTHH:mm
-           *
-           * We simply display that exact date and time.
-           */
           const formatDate = (value: string) => {
             if (!value) {
               return "";
@@ -133,14 +126,10 @@ export class StatisticsController {
                   ? `עד תאריך: ${formatDate(endDate)}`
                   : "";
 
-          /*
-           * INVERT PAGE FOR PDF
-           */
+        
+
           document.body.style.filter = "invert(1)";
 
-          /*
-           * PDF HEADER
-           */
           const header = document.createElement("div");
 
           header.style.cssText = `
@@ -154,9 +143,6 @@ export class StatisticsController {
             direction: rtl;
           `;
 
-          /*
-           * Current date
-           */
           const currentDate = document.createElement("div");
 
           currentDate.style.cssText = `
@@ -178,13 +164,11 @@ export class StatisticsController {
             },
           )}`;
 
-          /*
-           * Report title
-           */
           const title = document.createElement("h1");
 
           title.style.cssText = `
             margin: 0;
+            margin-top: 60px;
             text-align: center;
             font-size: 32px;
             font-weight: 700;
@@ -193,9 +177,6 @@ export class StatisticsController {
 
           title.textContent = "דו״ח חקירה";
 
-          /*
-           * Right-side logo
-           */
           const logo = document.createElement("img");
           logo.src = logoDataUri;
           logo.alt = "Logo";
@@ -212,9 +193,6 @@ export class StatisticsController {
             background: transparent;
           `;
 
-          /*
-           * Selected date range
-           */
           const dateRange = document.createElement("div");
 
           dateRange.style.cssText = `
@@ -239,18 +217,12 @@ export class StatisticsController {
 
           document.body.prepend(header);
 
-          /*
-           * HIDE NAVBAR
-           */
           document
             .querySelectorAll<HTMLElement>(".navbar")
             .forEach((element) => {
               element.style.display = "none";
             });
 
-          /*
-           * REMOVE SCROLLING
-           */
           const elements = document.querySelectorAll<HTMLElement>("*");
 
           elements.forEach((element) => {
@@ -269,23 +241,19 @@ export class StatisticsController {
             }
           });
 
-          /*
-           * HIDE EXPORT BUTTON
-           */
           document
             .querySelectorAll<HTMLElement>(".export-to-pdf-button")
             .forEach((element) => {
               element.style.display = "none";
             });
 
-          /*
-           * SUMMARY
-           */
           const summary = document.createElement("div");
 
           summary.innerHTML = `
             <div style="
               margin-top: 40px;
+              margin-left: 35px;
+              margin-right: 35px;
               padding-top: 20px;
               border-top: 1px solid #ccc;
               font-family: Arial, sans-serif;
@@ -295,7 +263,7 @@ export class StatisticsController {
                 margin: 0 0 10px 0;
                 font-size: 20px;
               ">
-                סיכום
+                  סיכום בעזרת AI
               </h2>
 
               <p style="
@@ -303,7 +271,7 @@ export class StatisticsController {
                 font-size: 14px;
                 line-height: 1.6;
               ">
-                רעי ףש'קח שךרעו דגנ בלידנג שדגךצמ בדקריףםשגכ ךשקי
+                כאן יהיה סיכום בעזרת AI של הנתונים שהוצגו בדו״ח.
               </p>
             </div>
           `;
@@ -317,9 +285,6 @@ export class StatisticsController {
         },
       );
 
-      /*
-       * GENERATE PDF
-       */
       const pdfBuffer = await page.pdf({
         width: "1500px",
         printBackground: true,

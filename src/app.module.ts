@@ -11,6 +11,7 @@ import { StatisticsModule } from "./modules/statistics/statistics.module.js";
     TypeOrmModule.forRoot({
       type: "postgres",
       host: process.env.DB_HOST || "localhost",
+      // change to your local variables
       port: Number(process.env.DB_PORT) || 5432,
       username: process.env.DB_USERNAME || "postgres",
       password: process.env.DB_PASSWORD || "postgres",
