@@ -23,6 +23,8 @@ export class StatisticsController {
   })
   async generatePdf(
     @Query("path") path: string,
+    @Query("startDate") startDateQuery: string,
+    @Query("endDate") endDateQuery: string,
     @Res() res: Response,
   ): Promise<void> {
     let browser;
@@ -35,6 +37,55 @@ export class StatisticsController {
         return;
       }
 
+      /*
+       * ============================
+       * GET DATE RANGE
+       * ============================
+       *
+       * First try the explicit query parameters.
+       * If they don't exist, try to get them from the path URL.
+       */
+
+      let startDate = startDateQuery;
+      let endDate = endDateQuery;
+
+      try {
+        const pageUrl = new URL(path);
+
+        if (!startDate) {
+          startDate = pageUrl.searchParams.get("startDate") ?? "";
+        }
+
+        if (!endDate) {
+          endDate = pageUrl.searchParams.get("endDate") ?? "";
+        }
+      } catch {
+        // If path is not a valid absolute URL, continue with the query values.
+      }
+
+      /*
+       * ============================
+       * REMOVE PDF PARAMETERS
+       * FROM THE PAGE URL
+       * ============================
+       *
+       * We don't want the startDate/endDate parameters
+       * to affect the actual React page.
+       */
+
+      let pagePath = path;
+
+      try {
+        const pageUrl = new URL(path);
+
+        pageUrl.searchParams.delete("startDate");
+        pageUrl.searchParams.delete("endDate");
+
+        pagePath = pageUrl.toString();
+      } catch {
+        // Keep original path if it isn't a valid URL.
+      }
+
       browser = await puppeteer.launch({
         headless: true,
         executablePath:
@@ -44,218 +95,236 @@ export class StatisticsController {
 
       const page = await browser.newPage();
 
-      await page.goto(path, {
+      await page.goto(pagePath, {
         waitUntil: "networkidle0",
         timeout: 120000,
       });
 
-      await page.evaluate(() => {
-        document.body.style.filter = "invert(1)";
+      await page.evaluate(
+        ({ startDate, endDate }) => {
+          /*
+           * ============================
+           * FORMAT SELECTED DATE RANGE
+           * ============================
+           */
 
-        /*
-         * ============================
-         * GET DATE RANGE FROM NAVBAR
-         * ============================
-         */
+          const formatDate = (value: string) => {
+            if (!value) {
+              return "";
+            }
 
-        const startDateInput = document.querySelector<HTMLInputElement>(
-          "#start-date-time",
-        );
+            const date = new Date(value);
 
-        const endDateInput = document.querySelector<HTMLInputElement>(
-          "#end-date-time",
-        );
+            if (Number.isNaN(date.getTime())) {
+              return value;
+            }
 
-        const startDate = startDateInput?.value ?? "";
-        const endDate = endDateInput?.value ?? "";
+            return date.toLocaleString("he-IL", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              hourCycle: "h23",
+              timeZone: "Asia/Jerusalem",
+            });
+          };
 
-        /*
-         * ============================
-         * FORMAT DATE
-         * ============================
-         */
+          const dateRangeText =
+            startDate && endDate
+              ? `טווח תאריכים: ${formatDate(startDate)} - ${formatDate(endDate)}`
+              : startDate
+                ? `מתאריך: ${formatDate(startDate)}`
+                : endDate
+                  ? `עד תאריך: ${formatDate(endDate)}`
+                  : "";
 
-        const formatDate = (value: string) => {
-          if (!value) {
-            return "";
-          }
+          /*
+           * ============================
+           * INVERT PAGE FOR PDF
+           * ============================
+           */
 
-          const date = new Date(value);
+          document.body.style.filter = "invert(1)";
 
-          if (Number.isNaN(date.getTime())) {
-            return value;
-          }
+          /*
+           * ============================
+           * PDF HEADER
+           * ============================
+           */
 
-          return date.toLocaleString("he-IL", {
-            dateStyle: "short",
-            timeStyle: "short",
-          });
-        };
+          const header = document.createElement("div");
 
-        /*
-         * ============================
-         * PDF HEADER
-         * ============================
-         */
-
-        const header = document.createElement("div");
-
-        header.style.cssText = `
-          position: relative;
-          width: 100%;
-          margin-bottom: 30px;
-          padding-bottom: 20px;
-          font-family: Arial, sans-serif;
-        `;
-
-        /*
-         * Current date - top left
-         */
-
-        const currentDate = document.createElement("div");
-
-        currentDate.style.cssText = `
-          position: absolute;
-          top: 0;
-          left: 0;
-          font-size: 13px;
-          color: #666;
-          text-align: left;
-        `;
-
-        currentDate.textContent = `הופק בתאריך: ${new Date().toLocaleString(
-          "he-IL",
-          {
-            dateStyle: "full",
-            timeStyle: "short",
-          },
-        )}`;
-
-        /*
-         * Report title
-         */
-
-        const title = document.createElement("h1");
-
-        title.style.cssText = `
-          margin: 0;
-          text-align: center;
-          font-size: 32px;
-          font-weight: 700;
-        `;
-
-        title.textContent = "דו״ח חקירה";
-
-        /*
-         * Selected date range
-         */
-
-        const dateRange = document.createElement("div");
-
-        dateRange.style.cssText = `
-          margin-top: 8px;
-          text-align: center;
-          font-size: 14px;
-          color: #666;
-        `;
-
-        if (startDate && endDate) {
-          dateRange.textContent = `טווח תאריכים: ${formatDate(
-            startDate,
-          )} - ${formatDate(endDate)}`;
-        }
-
-        header.appendChild(currentDate);
-        header.appendChild(title);
-
-        if (startDate && endDate) {
-          header.appendChild(dateRange);
-        }
-
-        document.body.prepend(header);
-
-        /*
-         * ============================
-         * HIDE NAVBAR
-         * ============================
-         */
-
-        document
-          .querySelectorAll<HTMLElement>(".navbar")
-          .forEach((element) => {
-            element.style.display = "none";
-          });
-
-        /*
-         * ============================
-         * REMOVE SCROLLING
-         * ============================
-         */
-
-        const elements = document.querySelectorAll<HTMLElement>("*");
-
-        elements.forEach((element) => {
-          const hasVerticalOverflow =
-            element.scrollHeight > element.clientHeight;
-
-          const hasHorizontalOverflow =
-            element.scrollWidth > element.clientWidth;
-
-          if (hasVerticalOverflow || hasHorizontalOverflow) {
-            element.style.overflow = "visible";
-            element.style.height = "auto";
-            element.style.maxHeight = "none";
-            element.style.width = "auto";
-            element.style.maxWidth = "none";
-          }
-        });
-
-        /*
-         * ============================
-         * HIDE EXPORT BUTTON
-         * ============================
-         */
-
-        document
-          .querySelectorAll<HTMLElement>(".export-to-pdf-button")
-          .forEach((element) => {
-            element.style.display = "none";
-          });
-
-        /*
-         * ============================
-         * SUMMARY
-         * ============================
-         */
-
-        const summary = document.createElement("div");
-
-        summary.innerHTML = `
-          <div style="
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #ccc;
+          header.style.cssText = `
+            position: relative;
+            width: 100%;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
             font-family: Arial, sans-serif;
-          ">
-            <h2 style="
-              margin: 0 0 10px 0;
-              font-size: 20px;
-            ">
-              סיכום
-            </h2>
+            direction: rtl;
+          `;
 
-            <p style="
-              margin: 0;
-              font-size: 14px;
-              line-height: 1.6;
-            ">
-              רעי ףש'קח שךרעו דגנ בלידנג שדגךצמ בדקריףםשגכ ךשקי
-            </p>
-          </div>
-        `;
+          /*
+           * Current date
+           */
 
-        document.body.appendChild(summary);
-      });
+          const currentDate = document.createElement("div");
+
+          currentDate.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            font-size: 13px;
+            color: #666;
+            text-align: left;
+            direction: rtl;
+          `;
+
+          currentDate.textContent = `הופק בתאריך: ${new Date().toLocaleString(
+            "he-IL",
+            {
+              dateStyle: "full",
+              timeStyle: "short",
+              timeZone: "Asia/Jerusalem",
+            },
+          )}`;
+
+          /*
+           * Report title
+           */
+
+          const title = document.createElement("h1");
+
+          title.style.cssText = `
+            margin: 0;
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+          `;
+
+          title.textContent = "דו״ח חקירה";
+
+          /*
+           * Selected date range
+           */
+
+          const dateRange = document.createElement("div");
+
+          dateRange.style.cssText = `
+            margin-top: 8px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            direction: rtl;
+          `;
+
+          if (dateRangeText) {
+            dateRange.textContent = dateRangeText;
+          }
+
+          header.appendChild(currentDate);
+          header.appendChild(title);
+
+          if (dateRangeText) {
+            header.appendChild(dateRange);
+          }
+
+          document.body.prepend(header);
+
+          /*
+           * ============================
+           * HIDE NAVBAR
+           * ============================
+           */
+
+          document
+            .querySelectorAll<HTMLElement>(".navbar")
+            .forEach((element) => {
+              element.style.display = "none";
+            });
+
+          /*
+           * ============================
+           * REMOVE SCROLLING
+           * ============================
+           */
+
+          const elements = document.querySelectorAll<HTMLElement>("*");
+
+          elements.forEach((element) => {
+            const hasVerticalOverflow =
+              element.scrollHeight > element.clientHeight;
+
+            const hasHorizontalOverflow =
+              element.scrollWidth > element.clientWidth;
+
+            if (hasVerticalOverflow || hasHorizontalOverflow) {
+              element.style.overflow = "visible";
+              element.style.height = "auto";
+              element.style.maxHeight = "none";
+              element.style.width = "auto";
+              element.style.maxWidth = "none";
+            }
+          });
+
+          /*
+           * ============================
+           * HIDE EXPORT BUTTON
+           * ============================
+           */
+
+          document
+            .querySelectorAll<HTMLElement>(".export-to-pdf-button")
+            .forEach((element) => {
+              element.style.display = "none";
+            });
+
+          /*
+           * ============================
+           * SUMMARY
+           * ============================
+           */
+
+          const summary = document.createElement("div");
+
+          summary.innerHTML = `
+            <div style="
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 1px solid #ccc;
+              font-family: Arial, sans-serif;
+              direction: rtl;
+            ">
+              <h2 style="
+                margin: 0 0 10px 0;
+                font-size: 20px;
+              ">
+                סיכום
+              </h2>
+
+              <p style="
+                margin: 0;
+                font-size: 14px;
+                line-height: 1.6;
+              ">
+                רעי ףש'קח שךרעו דגנ בלידנג שדגךצמ בדקריףםשגכ ךשקי
+              </p>
+            </div>
+          `;
+
+          document.body.appendChild(summary);
+        },
+        {
+          startDate: startDate ?? "",
+          endDate: endDate ?? "",
+        },
+      );
+
+      /*
+       * ============================
+       * GENERATE PDF
+       * ============================
+       */
 
       const pdfBuffer = await page.pdf({
         width: "1500px",
