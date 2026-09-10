@@ -23,8 +23,8 @@ export type CostBySystem = SystemCost[];
 
 export interface DailyInterceptions {
   date: string;
-  dronesIntercepted: number;
-  totalCost: number;
+  dronesTotalCost: number;
+  interceptorsTotalCost: number;
 }
 
 export type DailyInterceptionsData = DailyInterceptions[];
