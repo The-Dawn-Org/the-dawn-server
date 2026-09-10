@@ -13,6 +13,10 @@ async function bootstrap() {
     origin: 'http://localhost:5173',
   });
 
+  app.enableCors({
+    origin: 'http://localhost:5173',
+  });
+
   const config = new DocumentBuilder()
     .setTitle("The Dawn Server API")
     .setDescription("API documentation for the dawn server")
