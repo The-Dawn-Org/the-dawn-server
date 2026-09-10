@@ -3,7 +3,6 @@ import { EventType } from "../../types/Event.js";
 import {
   InterceptionEntity,
   InterceptionResult,
-  InterceptionStatus,
 } from "../entities/interception.entity.js";
 
 const REGION_CENTERS = [
@@ -12,14 +11,6 @@ const REGION_CENTERS = [
   { name: "דרום", latitude: 30.8, longitude: 34.8 },
   { name: "ירושלים", latitude: 31.7683, longitude: 35.2137 },
 ] as const;
-
-const STATUS_IN_HEBREW: Record<InterceptionStatus, string> = {
-  [InterceptionStatus.PENDING]: "ממתין",
-  [InterceptionStatus.IN_PROGRESS]: "בתהליך",
-  [InterceptionStatus.SUCCESS]: "הושלם בהצלחה",
-  [InterceptionStatus.FAILED]: "נכשל",
-  [InterceptionStatus.ABORTED]: "בוטל",
-};
 
 const RESULT_IN_HEBREW: Record<InterceptionResult, string> = {
   [InterceptionResult.HIT]: "יורט",
@@ -44,7 +35,7 @@ function getDroneInjuryCount(id: string, result: InterceptionResult | null): num
   for (const character of id) {
     hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
   }
-  return (hash % 5) + 1;
+  return hash % 6;
 }
 
 export function enrichMockEvent(event: EventType): EventType {

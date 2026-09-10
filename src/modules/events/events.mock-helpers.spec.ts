@@ -45,4 +45,17 @@ describe("enrichMockEvent", () => {
     expect(enriched.interceptionStatus).toBe("לא יורט");
     expect(enriched.droneInjuryCount).toBeGreaterThanOrEqual(1);
   });
+
+  it("allows zero injuries for a failed interception", () => {
+    const event = mapEntityToEventType(
+      createEntity({
+        id: "6",
+        status: InterceptionStatus.FAILED,
+        result: InterceptionResult.MISS,
+      })
+    );
+
+    expect(event.interceptionStatus).toBe("לא יורט");
+    expect(event.droneInjuryCount).toBe(0);
+  });
 });
