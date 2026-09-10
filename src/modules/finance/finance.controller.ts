@@ -25,4 +25,12 @@ export class FinanceController {
   async getDailyInterceptions(@Query() query: DateRangeQueryDto): Promise<DailyInterceptionsData> {
     return this.financeService.getDailyInterceptions(query.startDate, query.endDate);
   }
+
+  @Get("budget-by-date")
+  async getBudgetByDateRange(
+    @Query("startDate") startDate: string,
+    @Query("endDate") endDate: string,
+  ) {
+    return this.financeService.getBudgetByDateRange(startDate, endDate);
+  }
 }

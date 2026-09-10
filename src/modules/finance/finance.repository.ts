@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { InterceptionEntity } from "../finance/entities/interception.entity.js";
-import type { cardsInfo, DailyInterceptionsData } from "./types.js";
+import type { cardsInfo, DailyInterceptionsData, BudgetByDateRange } from "./types.js";
 
 @Injectable()
 export class FinanceRepository {
@@ -141,6 +141,42 @@ export class FinanceRepository {
     return rawResults.map((row) => ({
       systemName: row.systemName,
       totalCost: Number(row.totalCost || 0),
+    }));
+  }
+
+  /**
+   * Daily budget spent (interceptor cost only) for every day in the range,
+   * inclusive. Days with no interceptions come back as budget: 0.
+   */
+  async getBudgetByDateRange(
+    startDate: string | Date,
+    endDate: string | Date,
+  ): Promise<BudgetByDateRange> {
+    const range = this.normalizeDateRange(startDate, endDate);
+
+    if (!range) {
+      throw new Error("startDate and endDate are required");
+    }
+
+    const rawResults = await this.interceptionRepo.query(
+      `
+    SELECT
+      day::date AS date,
+      COALESCE(SUM(it.price), 0) AS budget
+    FROM generate_series($1::timestamptz, $2::timestamptz, interval '1 day') AS day
+    LEFT JOIN hatzot.interception i
+      ON DATE(i.launched_at) = day::date
+    LEFT JOIN hatzot.interceptor_type it
+      ON it.id = i.interceptor_type_id
+    GROUP BY day
+    ORDER BY day ASC
+    `,
+      [range.start, range.end],
+    );
+
+    return rawResults.map((row: { date: string; budget: string }) => ({
+      date: row.date,
+      budget: Number(row.budget || 0),
     }));
   }
 }
