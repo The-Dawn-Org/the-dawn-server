@@ -1,12 +1,17 @@
 import { Injectable } from "@nestjs/common";
+import { FilterEventsDto } from "../../types/DTO/FilterEventsDto.js";
 import { EventType } from "../../types/Event.js";
 import { EventsRepository } from "./events.repository.js";
 
 @Injectable()
 export class EventsService {
-  constructor(private readonly EventsRepository: EventsRepository) {}
+  constructor(private readonly eventsRepository: EventsRepository) {}
 
-  getEventById(id: string): EventType {
-    return this.EventsRepository.getMockEventById(id);
+  async getEventById(id: number): Promise<EventType> {
+    return await this.eventsRepository.getEventById(id);
+  }
+
+  async getAllEvents(filterDto: FilterEventsDto): Promise<EventType[]> {
+    return await this.eventsRepository.getAllEvents(filterDto);
   }
 }

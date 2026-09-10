@@ -1,0 +1,6 @@
+[
+  { "launcher": { "launcherId": 1, "launcherType": { "launcherTypeId": 1, "name": "קן-מגן קל", "reloadTime": 45 }, "location": { "lat": 33.0512, "lng": 35.2845 }, "asl": 480, "agl": 5.5, "amount": 8, "active": true }, "interceptorType": { "interceptorTypeId": 1, "type": "עוצר-זמזום 15", "price": 15000, "maxRange": 10000 }, "quantity": 6 },
+  { "launcher": { "launcherId": 1, "launcherType": { "launcherTypeId": 1, "name": "קן-מגן קל", "reloadTime": 45 }, "location": { "lat": 33.0512, "lng": 35.2845 }, "asl": 480, "agl": 5.5, "amount": 8, "active": true }, "interceptorType": { "interceptorTypeId": 2, "type": "כנף-רשת 30", "price": 22000, "maxRange": 10000 }, "quantity": 2 },
+  { "launcher": { "launcherId": 2, "launcherType": { "launcherTypeId": 1, "name": "קן-מגן קל", "reloadTime": 45 }, "location": { "lat": 32.8341, "lng": 35.195 }, "asl": 210, "agl": 6.2, "amount": 8, "active": true }, "interceptorType": { "interceptorTypeId": 7, "type": "ערפל-נחיל 5", "price": 7500, "maxRange": 5000 }, "quantity": 500 },
+  { "launcher": { "launcherId": 3, "launcherType": { "launcherTypeId": 1, "name": "קן-מגן קל", "reloadTime": 45 }, "location": { "lat": 32.482, "lng": 34.981 }, "asl": 65, "agl": 4.8, "amount": 6, "active": true }, "interceptorType": { "interceptorTypeId": 1, "type": "עוצר-זמזום 15", "price": 15000, "maxRange": 10000 }, "quantity": 0 }
+]
