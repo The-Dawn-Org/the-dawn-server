@@ -12,6 +12,6 @@ export class EventsService {
   }
 
   async getAllEvents(filterDto: FilterEventsDto): Promise<EventType[]> {
-    return await this.eventsRepository.getAllEvents(filterDto);
+    return this.eventsRepository.getAllEvents(filterDto);
   }
 }
