@@ -18,7 +18,7 @@ const isRemoteDB = process.env.ENVIRONMENT === 'prod' || process.env.ENVIRONMENT
       port: Number(process.env.DB_PORT) || 5432,
       username: process.env.DB_USERNAME || "postgres",
       password: process.env.DB_PASSWORD || "postgres",
-      database: process.env.DB_NAME || "postgres",
+      database: process.env.DB_NAME || "hatzot",
       schema: "hatzot",
       autoLoadEntities: true,
       synchronize: false,
