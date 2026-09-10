@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { RouterModule } from "@nestjs/core";
 import { TypeOrmModule } from "@nestjs/typeorm";
+import { AiModule } from "./modules/AIAnalysis/ai.module.js";
 import { DatabaseModule } from "./modules/database/database.module.js";
 import { EventsModule } from "./modules/events/events.module.js";
 import { FinanceModule } from "./modules/finance/finance.module.js";
@@ -25,6 +26,7 @@ const isRemoteDB = process.env.ENVIRONMENT === 'prod' || process.env.ENVIRONMENT
     }),
     StatisticsModule,
     FinanceModule,
+    AiModule,
     EventsModule,
     DatabaseModule,
     RouterModule.register([
