@@ -1,0 +1,6 @@
+[
+  { "launcherTypeId": 1, "name": "קן-מגן קל", "reloadTime": 45 },
+  { "launcherTypeId": 2, "name": "וו-ברזל אסר", "reloadTime": 90 },
+  { "launcherTypeId": 3, "name": "עין-אופק אמקס", "reloadTime": 30 },
+  { "launcherTypeId": 4, "name": "גדר-ענן שטח", "reloadTime": 120 }
+]

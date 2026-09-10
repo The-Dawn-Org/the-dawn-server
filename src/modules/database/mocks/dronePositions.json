@@ -1,0 +1,6 @@
+[
+  { "dronePositionId": 1, "drone": { "droneId": 1, "droneType": { "droneTypeId": 1, "type": "סקימייט סי-7", "price": 2500 }, "heading": 45, "velocity": 12.5 }, "location": { "lat": 32.0853, "lng": 34.7818 }, "asl": 150, "agl": 120 },
+  { "dronePositionId": 2, "drone": { "droneId": 1, "droneType": { "droneTypeId": 1, "type": "סקימייט סי-7", "price": 2500 }, "heading": 45, "velocity": 12.5 }, "location": { "lat": 32.0860, "lng": 34.7825 }, "asl": 152, "agl": 122 },
+  { "dronePositionId": 3, "drone": { "droneId": 2, "droneType": { "droneTypeId": 2, "type": "ננוסוורם קיו-9", "price": 1800 }, "heading": 270, "velocity": 38.2 }, "location": { "lat": 32.1000, "lng": 34.8000 }, "asl": 900, "agl": 850 },
+  { "dronePositionId": 4, "drone": { "droneId": 3, "droneType": { "droneTypeId": 3, "type": "לואדבי אמ-2", "price": 4200 }, "heading": 90, "velocity": 55 }, "location": { "lat": 32.0700, "lng": 34.7500 }, "asl": 300, "agl": 280 }
+]

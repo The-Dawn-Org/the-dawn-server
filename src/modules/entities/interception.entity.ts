@@ -1,4 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 import { DroneEntity } from "./drone.entity.js";
 import { InterceptorTypeEntity } from "./interceptor-type.entity.js";
 import { LauncherAmmunitionEntity } from "./launcher-ammunition.entity.js";
@@ -34,10 +40,18 @@ export class InterceptionEntity {
   @Column({ name: "launched_at", type: "timestamptz", default: () => "now()" })
   launchedAt!: Date;
 
-  @Column({ name: "interceptor_longitude", type: "double precision", nullable: true })
+  @Column({
+    name: "interceptor_longitude",
+    type: "double precision",
+    nullable: true,
+  })
   interceptorLongitude!: number;
 
-  @Column({ name: "interceptor_latitude", type: "double precision", nullable: true })
+  @Column({
+    name: "interceptor_latitude",
+    type: "double precision",
+    nullable: true,
+  })
   interceptorLatitude!: number;
 
   @Column({ type: "smallint", default: 3 })
