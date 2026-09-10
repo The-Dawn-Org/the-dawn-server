@@ -24,6 +24,8 @@
     "@nestjs/swagger": "^12.0.1",
     "@nestjs/typeorm": "^12.0.1",
     "pg": "^8.23.0",
+    "pidusage": "^4.0.1",
+    "puppeteer": "^25.10.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "typeorm": "^1.1.1"
@@ -35,6 +37,7 @@
     "@nestjs/testing": "^12.0.1",
     "@types/express": "^5.0.0",
     "@types/node": "^24.0.0",
+    "@types/pidusage": "^2.0.5",
     "oxfmt": "^0.67.0",
     "oxlint": "^1.79.0",
     "source-map-support": "^0.5.21",
