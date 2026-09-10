@@ -41,6 +41,7 @@ export class EventsRepository {
     );
   }
 
+
   private async queryAllEvents(filterDto?: FilterEventsDto): Promise<EventType[]> {
     const query = this.interceptionRepo
       .createQueryBuilder("interception")
@@ -50,13 +51,22 @@ export class EventsRepository {
       .leftJoinAndSelect("interception.liveLauncher", "liveLauncher")
       .where("interception.status IN (:...allowedResults)", {
         allowedResults: ["SUCCESS", "FAILED"],
-      });;
+      });
 
     if (filterDto?.type?.length) {
       query.andWhere("interceptorType.name IN (:...types)", { types: filterDto.type });
     }
+
+    if (filterDto?.startDate) {
+      query.andWhere("interception.launchedAt >= :startDate", { startDate: filterDto.startDate });
+    }
+
+    if (filterDto?.endDate) {
+      query.andWhere("interception.launchedAt <= :endDate", { endDate: filterDto.endDate });
+    }
+
     const rawEntities = await query.getMany();
-    return filterMockEvents(rawEntities.map(mapEntityToEventType), filterDto);
+    return rawEntities.map(mapEntityToEventType);
   }
 
 private async queryEventById(id: number): Promise<EventType> {

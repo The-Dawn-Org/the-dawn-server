@@ -87,6 +87,19 @@ export function filterMockEvents(
     if (filterDto.launchRegion?.length && !filterDto.launchRegion.includes(event.attackingBody)) {
       return false;
     }
+    const parseAsUTC = (dateStr: string | Date) => {
+      const str =
+        typeof dateStr === "string" && !dateStr.endsWith("Z")
+          ? dateStr + "Z"
+          : dateStr;
+      return new Date(str).getTime();
+    };
+
+    const eventDate = parseAsUTC(event.time);
+    const start = filterDto.startDate ? parseAsUTC(filterDto.startDate) : 0;
+    const end = filterDto.endDate ? parseAsUTC(filterDto.endDate) : Infinity;
+
+    if (eventDate < start || eventDate > end) return false;
     return true;
   });
 }
