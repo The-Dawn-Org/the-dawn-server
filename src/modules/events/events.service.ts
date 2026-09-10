@@ -7,6 +7,6 @@ export class EventsService {
   constructor(private readonly EventsRepository: EventsRepository) {}
 
   getEventById(id: string): EventType {
-    return this.EventsRepository.getMockEvent(id);
+    return this.EventsRepository.getMockEventById(id);
   }
 }
