@@ -1,0 +1,10 @@
+[
+  { "interceptorTypeId": 1, "type": "עוצר-זמזום 15", "price": 15000, "maxRange": 10000 },
+  { "interceptorTypeId": 2, "type": "כנף-רשת 30", "price": 22000, "maxRange": 10000 },
+  { "interceptorTypeId": 3, "type": "חץ-שועל אס", "price": 45000, "maxRange": 30000 },
+  { "interceptorTypeId": 4, "type": "רומח-מיני 70", "price": 68000, "maxRange": 30000 },
+  { "interceptorTypeId": 5, "type": "רומח-שמיים אמ", "price": 120000, "maxRange": 50000 },
+  { "interceptorTypeId": 6, "type": "אטב-בז אייץ", "price": 180000, "maxRange": 70000 },
+  { "interceptorTypeId": 7, "type": "ערפל-נחיל 5", "price": 7500, "maxRange": 5000 },
+  { "interceptorTypeId": 8, "type": "מיקרו-רשת אר", "price": 18000, "maxRange": 7000 }
+]
