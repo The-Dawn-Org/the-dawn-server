@@ -11,23 +11,26 @@ export class AiService {
     private readonly client: OpenAI;
 
     constructor() {
-        const apiKey = process.env.LOGFARE_API_KEY;
-        const proxy = process.env?.HTTPS_PROXY;
+  const apiKey = process.env.LOGFARE_API_KEY;
+  const proxy = process.env.HTTPS_PROXY;
 
-        if (!apiKey) {
-            throw new Error('LOGFARE_API_KEY is not configured');
-          }
-          
-          if (proxy) {
-            setGlobalDispatcher(new ProxyAgent(proxy));
-          }
+  if (!apiKey) {
+    throw new Error('LOGFARE_API_KEY is not configured');
+  }
 
-        this.client = new OpenAI({
-            apiKey,
-            baseURL: 'https://logfare.ai/v1',
-            timeout: 60_000,
-        });
-    }
+  if (proxy) {
+    console.log('Using proxy');
+    setGlobalDispatcher(new ProxyAgent(proxy));
+  } else {
+    console.log('Using direct connection');
+  }
+
+  this.client = new OpenAI({
+    apiKey,
+    baseURL: 'https://logfare.ai/v1',
+    timeout: 60_000,
+  });
+}
 
     async chat(message: string): Promise<string> {
         try {
