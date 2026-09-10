@@ -1,4 +1,4 @@
-import { Controller, Get, Header, Res } from "@nestjs/common";
+import { Controller, Get, Header, Query, Res } from "@nestjs/common";
 import { ApiOperation } from "@nestjs/swagger";
 import type { Response } from "express";
 import puppeteer from "puppeteer";
@@ -19,12 +19,22 @@ export class StatisticsController {
   @Header("Content-Type", "application/pdf")
   @Header("Content-Disposition", 'attachment; filename="report.pdf"')
   @ApiOperation({
-    summary: "Generate PDF from the investigation map page",
+    summary: "Generate PDF from the requested page",
   })
-  async generatePdf(@Res() res: Response): Promise<void> {
+  async generatePdf(
+    @Query("path") path: string,
+    @Res() res: Response,
+  ): Promise<void> {
     let browser;
 
     try {
+      if (!path) {
+        res.status(400).json({
+          message: "Path is required",
+        });
+        return;
+      }
+
       browser = await puppeteer.launch({
         headless: true,
         executablePath:
@@ -34,54 +44,153 @@ export class StatisticsController {
 
       const page = await browser.newPage();
 
-      await page.goto("http://localhost:5173/investigation-map", {
+      await page.goto(path, {
         waitUntil: "networkidle0",
         timeout: 120000,
       });
-      
 
       await page.evaluate(() => {
         document.body.style.filter = "invert(1)";
 
-        const Pagetitle = `דו"ח חקירה - ${document.title}`;
+        /*
+         * ============================
+         * GET DATE RANGE FROM NAVBAR
+         * ============================
+         */
+
+        const startDateInput = document.querySelector<HTMLInputElement>(
+          "#start-date-time",
+        );
+
+        const endDateInput = document.querySelector<HTMLInputElement>(
+          "#end-date-time",
+        );
+
+        const startDate = startDateInput?.value ?? "";
+        const endDate = endDateInput?.value ?? "";
+
+        /*
+         * ============================
+         * FORMAT DATE
+         * ============================
+         */
+
+        const formatDate = (value: string) => {
+          if (!value) {
+            return "";
+          }
+
+          const date = new Date(value);
+
+          if (Number.isNaN(date.getTime())) {
+            return value;
+          }
+
+          return date.toLocaleString("he-IL", {
+            dateStyle: "short",
+            timeStyle: "short",
+          });
+        };
+
+        /*
+         * ============================
+         * PDF HEADER
+         * ============================
+         */
 
         const header = document.createElement("div");
 
-        header.innerHTML = `
-          <div style="
-            text-align: center;
-            margin-bottom: 30px;
-            font-family: Arial, sans-serif;
-          ">
-            <h1 style="
-              margin: 0;
-              font-size: 32px;
-              font-weight: 700;
-            ">
-              ${Pagetitle}
-            </h1>
-
-            <div style="
-              margin-top: 6px;
-              left: 0;
-              font-size: 13px;
-              color: #666;
-            ">
-              תאריך: ${new Date().toLocaleString("he-IL", {
-                dateStyle: "full",
-                timeStyle: "short",
-              })}
-            </div>
-          </div>
+        header.style.cssText = `
+          position: relative;
+          width: 100%;
+          margin-bottom: 30px;
+          padding-bottom: 20px;
+          font-family: Arial, sans-serif;
         `;
 
+        /*
+         * Current date - top left
+         */
+
+        const currentDate = document.createElement("div");
+
+        currentDate.style.cssText = `
+          position: absolute;
+          top: 0;
+          left: 0;
+          font-size: 13px;
+          color: #666;
+          text-align: left;
+        `;
+
+        currentDate.textContent = `הופק בתאריך: ${new Date().toLocaleString(
+          "he-IL",
+          {
+            dateStyle: "full",
+            timeStyle: "short",
+          },
+        )}`;
+
+        /*
+         * Report title
+         */
+
+        const title = document.createElement("h1");
+
+        title.style.cssText = `
+          margin: 0;
+          text-align: center;
+          font-size: 32px;
+          font-weight: 700;
+        `;
+
+        title.textContent = "דו״ח חקירה";
+
+        /*
+         * Selected date range
+         */
+
+        const dateRange = document.createElement("div");
+
+        dateRange.style.cssText = `
+          margin-top: 8px;
+          text-align: center;
+          font-size: 14px;
+          color: #666;
+        `;
+
+        if (startDate && endDate) {
+          dateRange.textContent = `טווח תאריכים: ${formatDate(
+            startDate,
+          )} - ${formatDate(endDate)}`;
+        }
+
+        header.appendChild(currentDate);
+        header.appendChild(title);
+
+        if (startDate && endDate) {
+          header.appendChild(dateRange);
+        }
+
         document.body.prepend(header);
+
+        /*
+         * ============================
+         * HIDE NAVBAR
+         * ============================
+         */
 
         document
           .querySelectorAll<HTMLElement>(".navbar")
           .forEach((element) => {
             element.style.display = "none";
           });
+
+        /*
+         * ============================
+         * REMOVE SCROLLING
+         * ============================
+         */
 
         const elements = document.querySelectorAll<HTMLElement>("*");
 
@@ -100,6 +209,24 @@ export class StatisticsController {
             element.style.maxWidth = "none";
           }
         });
+
+        /*
+         * ============================
+         * HIDE EXPORT BUTTON
+         * ============================
+         */
+
+        document
+          .querySelectorAll<HTMLElement>(".export-to-pdf-button")
+          .forEach((element) => {
+            element.style.display = "none";
+          });
+
+        /*
+         * ============================
+         * SUMMARY
+         * ============================
+         */
 
         const summary = document.createElement("div");
 
@@ -131,8 +258,9 @@ export class StatisticsController {
       });
 
       const pdfBuffer = await page.pdf({
-        width: 1500,
+        width: "1500px",
         printBackground: true,
+        preferCSSPageSize: false,
       });
 
       res.setHeader("Content-Type", "application/pdf");
