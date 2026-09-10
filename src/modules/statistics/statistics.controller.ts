@@ -37,15 +37,7 @@ export class StatisticsController {
         return;
       }
 
-      /*
-       * ============================
-       * GET DATE RANGE
-       * ============================
-       *
-       * First try the explicit query parameters.
-       * If they don't exist, try to get them from the path URL.
-       */
-
+    
       let startDate = startDateQuery;
       let endDate = endDateQuery;
 
@@ -60,18 +52,10 @@ export class StatisticsController {
           endDate = pageUrl.searchParams.get("endDate") ?? "";
         }
       } catch {
-        // If path is not a valid absolute URL, continue with the query values.
+      
       }
 
-      /*
-       * ============================
-       * REMOVE PDF PARAMETERS
-       * FROM THE PAGE URL
-       * ============================
-       *
-       * We don't want the startDate/endDate parameters
-       * to affect the actual React page.
-       */
+      
 
       let pagePath = path;
 
@@ -83,7 +67,7 @@ export class StatisticsController {
 
         pagePath = pageUrl.toString();
       } catch {
-        // Keep original path if it isn't a valid URL.
+       
       }
 
       browser = await puppeteer.launch({
@@ -102,11 +86,7 @@ export class StatisticsController {
 
       await page.evaluate(
         ({ startDate, endDate }) => {
-          /*
-           * ============================
-           * FORMAT SELECTED DATE RANGE
-           * ============================
-           */
+        
 
           const formatDate = (value: string) => {
             if (!value) {
@@ -139,19 +119,9 @@ export class StatisticsController {
                   ? `עד תאריך: ${formatDate(endDate)}`
                   : "";
 
-          /*
-           * ============================
-           * INVERT PAGE FOR PDF
-           * ============================
-           */
+        
 
           document.body.style.filter = "invert(1)";
-
-          /*
-           * ============================
-           * PDF HEADER
-           * ============================
-           */
 
           const header = document.createElement("div");
 
@@ -163,10 +133,6 @@ export class StatisticsController {
             font-family: Arial, sans-serif;
             direction: rtl;
           `;
-
-          /*
-           * Current date
-           */
 
           const currentDate = document.createElement("div");
 
@@ -189,10 +155,6 @@ export class StatisticsController {
             },
           )}`;
 
-          /*
-           * Report title
-           */
-
           const title = document.createElement("h1");
 
           title.style.cssText = `
@@ -203,10 +165,6 @@ export class StatisticsController {
           `;
 
           title.textContent = "דו״ח חקירה";
-
-          /*
-           * Selected date range
-           */
 
           const dateRange = document.createElement("div");
 
@@ -231,23 +189,11 @@ export class StatisticsController {
 
           document.body.prepend(header);
 
-          /*
-           * ============================
-           * HIDE NAVBAR
-           * ============================
-           */
-
           document
             .querySelectorAll<HTMLElement>(".navbar")
             .forEach((element) => {
               element.style.display = "none";
             });
-
-          /*
-           * ============================
-           * REMOVE SCROLLING
-           * ============================
-           */
 
           const elements = document.querySelectorAll<HTMLElement>("*");
 
@@ -267,23 +213,11 @@ export class StatisticsController {
             }
           });
 
-          /*
-           * ============================
-           * HIDE EXPORT BUTTON
-           * ============================
-           */
-
           document
             .querySelectorAll<HTMLElement>(".export-to-pdf-button")
             .forEach((element) => {
               element.style.display = "none";
             });
-
-          /*
-           * ============================
-           * SUMMARY
-           * ============================
-           */
 
           const summary = document.createElement("div");
 
@@ -299,7 +233,7 @@ export class StatisticsController {
                 margin: 0 0 10px 0;
                 font-size: 20px;
               ">
-                סיכום
+                  סיכום בעזרת AI
               </h2>
 
               <p style="
@@ -307,7 +241,7 @@ export class StatisticsController {
                 font-size: 14px;
                 line-height: 1.6;
               ">
-                רעי ףש'קח שךרעו דגנ בלידנג שדגךצמ בדקריףםשגכ ךשקי
+                כאן יהיה סיכום בעזרת AI של הנתונים שהוצגו בדו״ח.
               </p>
             </div>
           `;
@@ -319,12 +253,6 @@ export class StatisticsController {
           endDate: endDate ?? "",
         },
       );
-
-      /*
-       * ============================
-       * GENERATE PDF
-       * ============================
-       */
 
       const pdfBuffer = await page.pdf({
         width: "1500px",
