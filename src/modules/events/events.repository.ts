@@ -41,6 +41,8 @@ export class EventsRepository {
     );
   }
 
+
+  //TODO filter events by date using SQL
   private async queryAllEvents(filterDto?: FilterEventsDto): Promise<EventType[]> {
     const query = this.interceptionRepo
       .createQueryBuilder("interception")
