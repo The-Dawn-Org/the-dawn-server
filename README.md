@@ -74,11 +74,12 @@ If the database is unreachable the app still boots: `DatabaseModule` logs
 `EXPOSE 3000` in the Dockerfile is documentation only - it publishes nothing.
 What routes traffic is `-p` locally and `containerPort` / the Service in GKE.
 
-### Logging
+### AI analysis - required
 
-| Variable | Default | Required | Notes |
+| Variable | Default | Must be set? | Notes |
 | --- | --- | --- | --- |
-| `LOGFARE_API_KEY` | unset | no | Logflare ingest key. **Supplied separately by the DS team** - it is not committed here and must not be. Inject it as a GKE Secret, or put it in a local `.env` (git-ignored). Note the variable name is spelled `LOGFARE_`, not `LOGFLARE_`. |
+| `LOGFARE_API_KEY` | unset | **yes** | LLM API key for `https://logfare.ai/v1`, used by `AiService` for the `/ai-analysis` endpoint. Despite the name it is not a logging key. **The app throws `LOGFARE_API_KEY is not configured` and exits on boot without it** - in GKE that is a CrashLoopBackOff, not a degraded feature. Supplied separately by the DS team; provide it as a Secret and never commit the value. Note the spelling is `LOGFARE_`, not `LOGFLARE_`. |
+| `HTTPS_PROXY` | unset | in the closed network | `ai.service.ts` passes it to undici's `ProxyAgent` for the outbound call to logfare.ai. Without it the AI request goes direct, which fails wherever egress requires the proxy. Logged at boot as `Using proxy` / `Using direct connection`. |
 
 Copy the names into a local `.env` (git-ignored) when running outside Docker.
 
@@ -130,8 +131,9 @@ curl http://localhost:3000/events       # JSON payload
 - Container listens on `$PORT` (3000). Point the Service/Ingress at that port.
 - Runs as non-root; no extra `securityContext` needed beyond `runAsNonRoot: true`.
 - Set `ENVIRONMENT=prod` (or `pre`) so the TypeORM connection uses TLS.
-- Secret: `DB_PASSWORD`, `LOGFARE_API_KEY`.
-- ConfigMap: `DB_HOST`, `DB_USERNAME`, `ENVIRONMENT`. That is all that is
+- Secret: `DB_PASSWORD`, `LOGFARE_API_KEY` (both required - the pod will not
+  start without the API key).
+- ConfigMap: `DB_HOST`, `DB_USERNAME`, `ENVIRONMENT`, `HTTPS_PROXY`. That is all that is
   actually needed - `DB_PORT`, `DB_NAME`, `PORT` and `NODE_ENV` already carry
   correct defaults from the Dockerfile, so add them only to override.
 
