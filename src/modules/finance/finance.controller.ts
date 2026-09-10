@@ -21,7 +21,7 @@ export class FinanceController {
   @Get("cost-by-system")
   @ApiOperation({ summary: "get cost per system chart data" })
   async getCostBySystem(
-    @Query() query: DateRangeQueryDto
+    @Query() query: DateRangeQueryDto,
   ): Promise<CostBySystem> {
     return this.financeService.getCostBySystem(query.startDate, query.endDate);
   }
@@ -29,11 +29,11 @@ export class FinanceController {
   @Get("daily-interceptions")
   @ApiOperation({ summary: "get daily drone interception stats" })
   async getDailyInterceptions(
-    @Query() query: DateRangeQueryDto
+    @Query() query: DateRangeQueryDto,
   ): Promise<DailyInterceptionsData> {
     return this.financeService.getDailyInterceptions(
       query.startDate,
-      query.endDate
+      query.endDate,
     );
   }
 }
