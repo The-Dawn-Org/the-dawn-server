@@ -26,10 +26,10 @@ export class FinanceRepository {
   private normalizeDateRange(startDate?: string | Date, endDate?: string | Date) {
     if (!startDate || !endDate) return null;
 
-    const start = new Date(startDate);
+    const start = new Date(new Date(startDate).getTime() + 1000 * 24 * 60 * 60);
     start.setUTCHours(0, 0, 0, 0);
 
-    const end = new Date(endDate);
+    const end = new Date(new Date(endDate).getTime() + 1000 * 24 * 60 * 60);
     end.setUTCHours(23, 59, 59, 999);
 
     return {
