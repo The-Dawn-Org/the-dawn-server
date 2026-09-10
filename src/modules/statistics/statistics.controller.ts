@@ -38,16 +38,101 @@ export class StatisticsController {
         waitUntil: "networkidle0",
         timeout: 120000,
       });
+      
+
+      await page.evaluate(() => {
+        document.body.style.filter = "invert(1)";
+
+        const Pagetitle = `דו"ח חקירה - ${document.title}`;
+
+        const header = document.createElement("div");
+
+        header.innerHTML = `
+          <div style="
+            text-align: center;
+            margin-bottom: 30px;
+            font-family: Arial, sans-serif;
+          ">
+            <h1 style="
+              margin: 0;
+              font-size: 32px;
+              font-weight: 700;
+            ">
+              ${Pagetitle}
+            </h1>
+
+            <div style="
+              margin-top: 6px;
+              left: 0;
+              font-size: 13px;
+              color: #666;
+            ">
+              תאריך: ${new Date().toLocaleString("he-IL", {
+                dateStyle: "full",
+                timeStyle: "short",
+              })}
+            </div>
+          </div>
+        `;
+
+        document.body.prepend(header);
+
+        document
+          .querySelectorAll<HTMLElement>(".navbar")
+          .forEach((element) => {
+            element.style.display = "none";
+          });
+
+        const elements = document.querySelectorAll<HTMLElement>("*");
+
+        elements.forEach((element) => {
+          const hasVerticalOverflow =
+            element.scrollHeight > element.clientHeight;
+
+          const hasHorizontalOverflow =
+            element.scrollWidth > element.clientWidth;
+
+          if (hasVerticalOverflow || hasHorizontalOverflow) {
+            element.style.overflow = "visible";
+            element.style.height = "auto";
+            element.style.maxHeight = "none";
+            element.style.width = "auto";
+            element.style.maxWidth = "none";
+          }
+        });
+
+        const summary = document.createElement("div");
+
+        summary.innerHTML = `
+          <div style="
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ccc;
+            font-family: Arial, sans-serif;
+          ">
+            <h2 style="
+              margin: 0 0 10px 0;
+              font-size: 20px;
+            ">
+              סיכום
+            </h2>
+
+            <p style="
+              margin: 0;
+              font-size: 14px;
+              line-height: 1.6;
+            ">
+              רעי ףש'קח שךרעו דגנ בלידנג שדגךצמ בדקריףםשגכ ךשקי
+            </p>
+          </div>
+        `;
+
+        document.body.appendChild(summary);
+      });
 
       const pdfBuffer = await page.pdf({
-        format: "A4",
+        width: 1500,
         printBackground: true,
-        margin: {
-          top: "20px",
-          right: "20px",
-          bottom: "20px",
-          left: "20px",
-        },
       });
 
       res.setHeader("Content-Type", "application/pdf");
