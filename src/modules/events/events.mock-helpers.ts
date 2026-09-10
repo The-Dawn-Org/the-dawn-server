@@ -29,11 +29,9 @@ const RESULT_IN_HEBREW: Record<InterceptionResult, string> = {
 function getRegion(latitude: number, longitude: number): string {
   return REGION_CENTERS.reduce((nearest, candidate) => {
     const nearestDistance =
-      (latitude - nearest.latitude) ** 2 +
-      (longitude - nearest.longitude) ** 2;
+      (latitude - nearest.latitude) ** 2 + (longitude - nearest.longitude) ** 2;
     const candidateDistance =
-      (latitude - candidate.latitude) ** 2 +
-      (longitude - candidate.longitude) ** 2;
+      (latitude - candidate.latitude) ** 2 + (longitude - candidate.longitude) ** 2;
 
     return candidateDistance < nearestDistance ? candidate : nearest;
   }).name;
@@ -68,7 +66,10 @@ export function enrichMockEvent(event: EventType): EventType {
   };
 }
 
-export function filterMockEvents(mockEvents: EventType[], filterDto?: FilterEventsDto): EventType[] {
+export function filterMockEvents(
+  mockEvents: EventType[],
+  filterDto?: FilterEventsDto,
+): EventType[] {
   if (!filterDto || Object.keys(filterDto).length === 0) {
     return mockEvents;
   }
@@ -95,10 +96,8 @@ export function findMockEventById(mockEvents: EventType[], id: number): EventTyp
 }
 
 export function mapEntityToEventType(entity: InterceptionEntity): EventType {
-  const latitude =
-    entity.interceptorLatitude ?? entity.liveLauncher?.latitude ?? 0;
-  const longitude =
-    entity.interceptorLongitude ?? entity.liveLauncher?.longitude ?? 0;
+  const latitude = entity.interceptorLatitude ?? entity.liveLauncher?.latitude ?? 0;
+  const longitude = entity.interceptorLongitude ?? entity.liveLauncher?.longitude ?? 0;
   const region = getRegion(latitude, longitude);
 
   return {
@@ -114,6 +113,7 @@ export function mapEntityToEventType(entity: InterceptionEntity): EventType {
         lat: entity.liveLauncher?.latitude ?? 0,
         lng: entity.liveLauncher?.longitude ?? 0,
       },
+      launcherName: entity.liveLauncher.launcherType?.name ?? "כיפת ברזל",
     },
     region,
     time: entity.launchedAt ? entity.launchedAt.toISOString() : "",
@@ -121,7 +121,7 @@ export function mapEntityToEventType(entity: InterceptionEntity): EventType {
       lat: latitude,
       lng: longitude,
     },
-    interceptionStatus: RESULT_IN_HEBREW[entity.result as InterceptionResult],
+    interceptionStatus: entity.result ? RESULT_IN_HEBREW[entity.result] : "לא ידוע",
     droneInjuryCount: getDroneInjuryCount(entity.id, entity.result),
     attackingBody: region === "צפון" ? "חיזבאללה" : "חמאס",
     drone: {
