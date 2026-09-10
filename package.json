@@ -14,6 +14,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "test": "vitest run",
     "lint": "oxlint src/ test/"
   },
   "dependencies": {
@@ -39,7 +40,9 @@
     "@types/node": "^24.0.0",
     "oxfmt": "^0.67.0",
     "oxlint": "^1.79.0",
+    "oxlint-tsgolint": "^7.0.2001",
     "source-map-support": "^0.5.21",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "vitest": "^5.0.0"
   }
 }

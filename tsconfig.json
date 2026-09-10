@@ -17,6 +17,7 @@
     "incremental": true,
     "skipLibCheck": true,
     "strict": true,
+    "resolveJsonModule": true,
     "strictPropertyInitialization": false,
     "types": ["node"]
   }
