@@ -13,6 +13,11 @@ async function bootstrap() {
     origin: 'http://localhost:5173',
   });
 
+  app.enableCors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  });
+
   const config = new DocumentBuilder()
     .setTitle("The Dawn Server API")
     .setDescription("API documentation for the dawn server")
@@ -25,6 +30,6 @@ async function bootstrap() {
   const port = process.env.PORT ?? 3000;
 
   await app.listen(port);
-  console.log(`listening on port ${port}🚀`)
+  console.log(`listening on port ${port}🚀`);
 }
 await bootstrap();

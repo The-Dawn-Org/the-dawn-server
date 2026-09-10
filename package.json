@@ -26,10 +26,14 @@
     "@nestjs/typeorm": "^12.0.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "openai": "^7.13.0",
     "pg": "^8.23.0",
+    "pidusage": "^4.0.1",
+    "puppeteer": "^25.10.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "typeorm": "^1.1.1"
+    "typeorm": "^1.1.1",
+    "undici": "^8.10.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^12.0.0",
@@ -38,6 +42,7 @@
     "@nestjs/testing": "^12.0.1",
     "@types/express": "^5.0.0",
     "@types/node": "^24.0.0",
+    "@types/pidusage": "^2.0.5",
     "oxfmt": "^0.67.0",
     "oxlint": "^1.79.0",
     "oxlint-tsgolint": "^7.0.2001",
