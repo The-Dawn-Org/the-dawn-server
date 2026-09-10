@@ -21,10 +21,10 @@ export class FinanceRepository {
   private normalizeDateRange(startDate?: string | Date, endDate?: string | Date) {
     if (!startDate || !endDate) return null;
 
-    const start = new Date(startDate);
-    start.setUTCHours(0, 0, 0, 0);
+    const start = new Date(new Date(startDate).getTime() + 1000 * 24 *60 * 60);
+    start.setUTCHours(0,0,0,0);
 
-    const end = new Date(endDate);
+    const end = new Date(new Date(endDate).getTime() + 1000 * 24 * 60 * 60);
     end.setUTCHours(23, 59, 59, 999);
 
     return {
@@ -105,46 +105,62 @@ export class FinanceRepository {
   }
 
   /**
-   * Daily interception metrics grouped by day: value of drones actually
-   * destroyed that day, and value of the interceptors used to destroy them.
-   * Restricted to SUCCESS/HIT interceptions only - pending, in-progress,
-   * failed, and aborted attempts are excluded so a drone's price isn't
-   * counted for attempts that didn't actually take it down (and isn't
-   * double-counted across multiple attempts against the same drone).
+   * Daily interception metrics for every day in the range, inclusive: value
+   * of drones actually destroyed that day, and value of the interceptors
+   * used to destroy them. Restricted to SUCCESS/HIT interceptions only -
+   * pending, in-progress, failed, and aborted attempts are excluded so a
+   * drone's price isn't counted for attempts that didn't actually take it
+   * down (and isn't double-counted across multiple attempts against the
+   * same drone).
+   *
+   * Days with no successful interceptions come back as
+   * { dronesTotalCost: 0, interceptorsTotalCost: 0 } via a generate_series
+   * left-joined against the data, so empty days aren't silently dropped
+   * like a plain GROUP BY would do. The SUCCESS/HIT filter is applied
+   * inside the LEFT JOIN's ON clause rather than a WHERE - putting it in
+   * WHERE would strip out the NULL-joined rows for empty days along with
+   * the unwanted interceptions, undoing the zero-fill.
    */
   async getDailyInterceptions(
-    startDate?: string | Date,
-    endDate?: string | Date,
+    startDate: string | Date,
+    endDate: string | Date,
   ): Promise<DailyInterceptionsData> {
     const range = this.normalizeDateRange(startDate, endDate);
 
-    const qb = this.interceptionRepo
-      .createQueryBuilder("interception")
-      .select("DATE(interception.launchedAt)", "date")
-      .addSelect('COALESCE(SUM("droneType"."price"), 0)', "dronesTotalCost")
-      .addSelect('COALESCE(SUM("interceptorType"."price"), 0)', "interceptorsTotalCost")
-      .innerJoin("interception.interceptorType", "interceptorType")
-      .innerJoin("interception.drone", "drone")
-      .innerJoin("drone.droneType", "droneType")
-      .where("interception.status = :status", { status: InterceptionStatus.SUCCESS })
-      .andWhere("interception.result = :result", { result: InterceptionResult.HIT })
-      .groupBy("DATE(interception.launchedAt)")
-      .orderBy("DATE(interception.launchedAt)", "ASC");
-
-    if (range) {
-      qb.andWhere("interception.launchedAt BETWEEN :start AND :end", {
-        start: range.start,
-        end: range.end,
-      });
+    if (!range) {
+      throw new Error("startDate and endDate are required");
     }
 
-    const rawResults = await qb.getRawMany();
+    const rawResults = await this.interceptionRepo.query(
+      `
+      SELECT
+        day::date AS date,
+        COALESCE(SUM(dt.price), 0) AS "dronesTotalCost",
+        COALESCE(SUM(it.price), 0) AS "interceptorsTotalCost"
+      FROM generate_series($1::date, $2::date, interval '1 day') AS day
+      LEFT JOIN hatzot.interception i
+        ON (i.launched_at AT TIME ZONE 'UTC')::date = day::date
+        AND i.status = $3
+        AND i.result = $4
+      LEFT JOIN hatzot.interceptor_type it
+        ON it.id = i.interceptor_type_id
+      LEFT JOIN hatzot.drone d
+        ON d.id = i.drone_id
+      LEFT JOIN hatzot.drone_type dt
+        ON dt.id = d.drone_type_id
+      GROUP BY day
+      ORDER BY day ASC
+      `,
+      [range.start, range.end, InterceptionStatus.SUCCESS, InterceptionResult.HIT],
+    );
 
-    return rawResults.map((row) => ({
-      date: row.date,
-      dronesTotalCost: Number(row.dronesTotalCost || 0),
-      interceptorsTotalCost: Number(row.interceptorsTotalCost || 0),
-    }));
+    return rawResults.map(
+      (row: { date: string; dronesTotalCost: string; interceptorsTotalCost: string }) => ({
+        date: row.date,
+        dronesTotalCost: Number(row.dronesTotalCost || 0),
+        interceptorsTotalCost: Number(row.interceptorsTotalCost || 0),
+      }),
+    );
   }
 
   /**
@@ -196,9 +212,9 @@ export class FinanceRepository {
       SELECT
         day::date AS date,
         COALESCE(SUM(it.price), 0) AS budget
-      FROM generate_series($1::timestamptz, $2::timestamptz, interval '1 day') AS day
+      FROM generate_series($1::date, $2::date, interval '1 day') AS day
       LEFT JOIN hatzot.interception i
-        ON DATE(i.launched_at) = day::date
+        ON (i.launched_at AT TIME ZONE 'UTC')::date = day::date
       LEFT JOIN hatzot.interceptor_type it
         ON it.id = i.interceptor_type_id
       GROUP BY day
