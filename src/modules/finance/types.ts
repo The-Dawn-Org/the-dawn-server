@@ -35,3 +35,12 @@ export interface BudgetByDate {
 }
 
 export type BudgetByDateRange = BudgetByDate[];
+
+export interface LauncherInventory {
+  type: string;
+  current: number;
+  min: number;
+  max: number;
+}
+
+export type LauncherInventoryData = LauncherInventory[];

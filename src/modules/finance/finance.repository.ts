@@ -6,7 +6,12 @@ import {
   InterceptionResult,
   InterceptionStatus,
 } from "../finance/entities/interception.entity.js";
-import type { BudgetByDateRange, cardsInfo, DailyInterceptionsData } from "./types.js";
+import type {
+  BudgetByDateRange,
+  cardsInfo,
+  DailyInterceptionsData,
+  LauncherInventoryData,
+} from "./types.js";
 
 @Injectable()
 export class FinanceRepository {
@@ -21,10 +26,10 @@ export class FinanceRepository {
   private normalizeDateRange(startDate?: string | Date, endDate?: string | Date) {
     if (!startDate || !endDate) return null;
 
-    const start = new Date(new Date(startDate).getTime() + 1000 * 24 *60 * 60);
-    start.setUTCHours(0,0,0,0);
+    const start = new Date(startDate);
+    start.setUTCHours(0, 0, 0, 0);
 
-    const end = new Date(new Date(endDate).getTime() + 1000 * 24 * 60 * 60);
+    const end = new Date(endDate);
     end.setUTCHours(23, 59, 59, 999);
 
     return {
@@ -228,4 +233,60 @@ export class FinanceRepository {
       budget: Number(row.budget || 0),
     }));
   }
+
+  /**
+   * Current interceptor stock per launcher system (launcher_type), plus a
+   * hardcoded min/max capacity band per type for the inventory gauge chart.
+   *
+   * "Current" is the live stockpile: SUM(launcher_ammunition.quantity)
+   * across every live_launcher of that launcher_type. min/max aren't
+   * tracked anywhere in the schema, so they're hardcoded here per type
+   * name - update LAUNCHER_INVENTORY_THRESHOLDS if launcher_type names
+   * change or a new type is added, or a type will silently fall back to
+   * the DEFAULT_THRESHOLDS band.
+   */
+  async getLauncherInventory(): Promise<LauncherInventoryData> {
+    const rawResults = await this.interceptionRepo.query(`
+      SELECT
+        lt.id AS "launcherTypeId",
+        lt.name AS "launcherTypeName",
+        COALESCE(SUM(la.quantity), 0) AS "currentQuantity"
+      FROM hatzot.launcher_type lt
+      LEFT JOIN hatzot.live_launcher ll
+        ON ll.launcher_type_id = lt.id
+      LEFT JOIN hatzot.launcher_ammunition la
+        ON la.launcher_id = ll.id
+      GROUP BY lt.id, lt.name
+      ORDER BY lt.id ASC
+    `);
+
+    return rawResults.map(
+      (row: { launcherTypeId: number; launcherTypeName: string; currentQuantity: string }) => {
+        const thresholds =
+          LAUNCHER_INVENTORY_THRESHOLDS[row.launcherTypeName] ?? DEFAULT_INVENTORY_THRESHOLDS;
+
+        return {
+          type: row.launcherTypeName,
+          current: Number(row.currentQuantity || 0),
+          min: thresholds.min,
+          max: thresholds.max,
+        };
+      },
+    );
+  }
 }
+
+/**
+ * Hardcoded min/max capacity band per launcher_type.name, since the DB has
+ * no columns for this. Keyed by name rather than id so seed-data reordering
+ * doesn't silently mismatch a type to the wrong band.
+ */
+const LAUNCHER_INVENTORY_THRESHOLDS: Record<string, { min: number; max: number }> = {
+  "ShieldNest-Lite": { min: 1000, max: 5000 },
+  "IronHook-SR": { min: 60, max: 300 },
+  "HorizonEye-MX": { min: 30, max: 150 },
+  "CloudFence-Area": { min: 16, max: 80 },
+};
+
+/** Fallback band for any launcher_type not listed above. */
+const DEFAULT_INVENTORY_THRESHOLDS = { min: 0, max: 100 };

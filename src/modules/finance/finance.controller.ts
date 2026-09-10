@@ -2,7 +2,13 @@ import { Controller, Get, Query } from "@nestjs/common";
 import { ApiOperation } from "@nestjs/swagger";
 import { DateRangeQueryDto } from "../../DTOS/date-range-query.dto.js";
 import { FinanceService } from "./finance.service.js";
-import type { cardsInfo, CostBySystem, DailyInterceptionsData } from "./types.ts";
+import type {
+  BudgetByDateRange,
+  cardsInfo,
+  CostBySystem,
+  DailyInterceptionsData,
+  LauncherInventoryData,
+} from "./types.ts";
 
 @Controller()
 export class FinanceController {
@@ -27,10 +33,16 @@ export class FinanceController {
   }
 
   @Get("budget-by-date")
-  async getBudgetByDateRange(
-    @Query("startDate") startDate: string,
-    @Query("endDate") endDate: string,
-  ) {
-    return this.financeService.getBudgetByDateRange(startDate, endDate);
+  @ApiOperation({ summary: "get budget spent per day in a date range" })
+  async getBudgetByDateRange(@Query() query: DateRangeQueryDto): Promise<BudgetByDateRange> {
+    return this.financeService.getBudgetByDateRange(query.startDate, query.endDate);
+  }
+
+  @Get("launcher-inventory")
+  @ApiOperation({
+    summary: "get current interceptor stock per launcher system, with min/max capacity",
+  })
+  async getLauncherInventory(): Promise<LauncherInventoryData> {
+    return this.financeService.getLauncherInventory();
   }
 }

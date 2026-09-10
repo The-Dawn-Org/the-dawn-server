@@ -1,6 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { FinanceRepository } from "./finance.repository.js";
-import { BudgetByDateRange, cardsInfo, CostBySystem, DailyInterceptionsData } from "./types.js";
+import {
+  BudgetByDateRange,
+  cardsInfo,
+  CostBySystem,
+  DailyInterceptionsData,
+  LauncherInventoryData,
+} from "./types.js";
 
 @Injectable()
 export class FinanceService {
@@ -20,5 +26,9 @@ export class FinanceService {
 
   async getBudgetByDateRange(startDate: string, endDate: string): Promise<BudgetByDateRange> {
     return this.financeRepository.getBudgetByDateRange(startDate, endDate);
+  }
+
+  async getLauncherInventory(): Promise<LauncherInventoryData> {
+    return this.financeRepository.getLauncherInventory();
   }
 }
