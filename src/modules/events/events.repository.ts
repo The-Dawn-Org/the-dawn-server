@@ -40,7 +40,7 @@ export class EventsRepository {
       () => findMockEventById(this.mockEvents, id),
     );
   }
-
+//
   private async queryAllEvents(filterDto?: FilterEventsDto): Promise<EventType[]> {
     const query = this.interceptionRepo
       .createQueryBuilder("interception")
