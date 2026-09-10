@@ -3,14 +3,21 @@ import { DataSource, Repository } from "typeorm";
 import { FilterEventsDto } from "../../types/DTO/FilterEventsDto.js";
 import { EventType } from "../../types/Event.js";
 import { DB_CONNECTION } from "../database/database.module.js";
+import mockEventsData from "../database/mocks/events.json" with { type: "json" };
 import { withFallback } from "../database/with-fallback.js";
 import { InterceptionEntity } from "../entities/interception.entity.js";
-import mockEventsData from "./eventMocks/events.json" with { type: "json" };
-import { filterMockEvents, findMockEventById, mapEntityToEventType } from "./events.mock-helpers.js";
+import {
+    enrichMockEvent,
+    filterMockEvents,
+    findMockEventById,
+    mapEntityToEventType,
+} from "./events.mock-helpers.js";
 
 @Injectable()
 export class EventsRepository {
-  private readonly mockEvents: EventType[] = mockEventsData as EventType[];
+  private readonly mockEvents: EventType[] = (
+    mockEventsData as EventType[]
+  ).map(enrichMockEvent);
 
   constructor(
     @Inject(DB_CONNECTION) private readonly dataSource: DataSource,
@@ -45,12 +52,8 @@ export class EventsRepository {
     if (filterDto?.type?.length) {
       query.andWhere("interceptorType.name IN (:...types)", { types: filterDto.type });
     }
-    if (filterDto?.status?.length) {
-      query.andWhere("interception.status IN (:...statuses)", { statuses: filterDto.status });
-    }
-
     const rawEntities = await query.getMany();
-    return rawEntities.map(mapEntityToEventType);
+    return filterMockEvents(rawEntities.map(mapEntityToEventType), filterDto);
   }
 
   private async queryEventById(id: number): Promise<EventType> {
