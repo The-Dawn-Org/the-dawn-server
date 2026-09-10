@@ -3,4 +3,6 @@ export class FilterEventsDto {
   type?: string[];
   launchRegion?: string[];
   status?: string[];
+  startDate?: string;
+  endDate?: string;
 }
