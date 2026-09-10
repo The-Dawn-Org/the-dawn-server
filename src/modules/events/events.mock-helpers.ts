@@ -134,7 +134,7 @@ export function mapEntityToEventType(entity: InterceptionEntity): EventType {
       lat: latitude,
       lng: longitude,
     },
-    interceptionStatus: entity.result ? RESULT_IN_HEBREW[entity.result] : "לא ידוע",
+    interceptionStatus: RESULT_IN_HEBREW[entity.result as InterceptionResult],
     droneInjuryCount: getDroneInjuryCount(entity.id, entity.result),
     attackingBody: region === "צפון" ? "חיזבאללה" : "חמאס",
     drone: {
