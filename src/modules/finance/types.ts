@@ -15,7 +15,7 @@ export interface DateRangeQuery {
 }
 
 export interface SystemCost {
-  systemName: "Iron Dome" | "David's Sling" | "Arrow 2" | "Arrow 3";
+  systemName: string;
   totalCost: number;
 }
 
