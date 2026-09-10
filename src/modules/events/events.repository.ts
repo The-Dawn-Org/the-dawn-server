@@ -49,6 +49,7 @@ export class EventsRepository {
       .leftJoinAndSelect("drone.droneType", "droneType")
       .leftJoinAndSelect("interception.interceptorType", "interceptorType")
       .leftJoinAndSelect("interception.liveLauncher", "liveLauncher")
+      .leftJoinAndSelect("liveLauncher.launcherType", "launcherType")
       .where("interception.status IN (:...allowedResults)", {
         allowedResults: ["SUCCESS", "FAILED"],
       });
