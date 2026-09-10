@@ -1,0 +1,6 @@
+[
+  { "droneTypeId": 1, "type": "סקימייט סי-7", "price": 2500 },
+  { "droneTypeId": 2, "type": "ננוסוורם קיו-9", "price": 1800 },
+  { "droneTypeId": 3, "type": "לואדבי אמ-2", "price": 4200 },
+  { "droneTypeId": 4, "type": "פלקון-לונג אקס-4", "price": 6800 }
+]
