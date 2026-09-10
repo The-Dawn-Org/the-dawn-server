@@ -4,6 +4,8 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { FinanceModule } from "./modules/finance/finance.module.js";
 import { StatisticsModule } from "./modules/statistics/statistics.module.js";
 
+const isRemoteDB = process.env.ENVIRONMENT === 'prod' || process.env.ENVIRONMENT === 'pre';
+
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -16,6 +18,7 @@ import { StatisticsModule } from "./modules/statistics/statistics.module.js";
       schema: "hatzot",
       autoLoadEntities: true,
       synchronize: false,
+      ssl: isRemoteDB ? { rejectUnauthorized: false } : false
     }),
     StatisticsModule,
     FinanceModule,
